@@ -2,10 +2,10 @@ import NextAuth from "next-auth";
 import { authConfig } from "@/backend/lib/auth/config";
 import { NextResponse } from "next/server";
 
-const { auth } = NextAuth(authConfig);
-
 const PUBLIC_ROUTES = ["/login", "/signup", "/view"];
 const AUTH_PAGES = ["/login", "/signup"];
+
+const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
