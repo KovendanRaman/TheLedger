@@ -208,14 +208,14 @@ export function getMockTxnCountByInvoice(): Record<string, number> {
   return counts;
 }
 
-export const MOCK_PARENTAL_KEY = MOCK_PROFILE.parental_key;
+export const MOCK_PARENTAL_KEY = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
 
 // ─── Mock Parental Links ──────────────────────────────────────
 export const MOCK_PARENTAL_LINKS: ParentalLink[] = [
   {
     id: "plink-001",
     user_id: "mock-user-001",
-    key: MOCK_PROFILE.parental_key,
+    key: MOCK_PARENTAL_KEY,
     label: "Mom",
     created_at: "2026-01-01T00:00:00Z",
   },
