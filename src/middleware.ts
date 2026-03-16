@@ -4,10 +4,12 @@ import { NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
 
+const PUBLIC_ROUTES = ["/login", "/signup", "/view"];
+const AUTH_PAGES = ["/login", "/signup"];
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // ── Mock mode: skip all auth checks ──────────────────────────
   if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true") {
     if (pathname === "/") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -16,23 +18,22 @@ export default auth((req) => {
   }
 
   const isLoggedIn = !!req.auth;
-  const publicRoutes = ["/login", "/signup", "/view"];
-  const isPublicRoute = publicRoutes.some((r) => pathname.startsWith(r));
+  const isPublicRoute = PUBLIC_ROUTES.some((r) => pathname.startsWith(r));
+  const isAuthPage = AUTH_PAGES.some((r) => pathname === r);
 
-  // Redirect root based on auth state
   if (pathname === "/") {
     return NextResponse.redirect(
       new URL(isLoggedIn ? "/dashboard" : "/login", req.url)
     );
   }
 
-  // Redirect unauthenticated users to login
   if (!isLoggedIn && !isPublicRoute) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect logged-in users away from auth pages
-  if (isLoggedIn && (pathname === "/login" || pathname === "/signup")) {
+  if (isLoggedIn && isAuthPage) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 

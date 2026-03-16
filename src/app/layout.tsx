@@ -3,6 +3,7 @@ import { Inter, Geist } from "next/font/google";
 import { JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/frontend/components/ui/sonner";
 import { AuthSessionProvider } from "@/frontend/components/session-provider";
+import { NavigationLoader } from "@/frontend/components/navigation-loader";
 import "@/frontend/styles/globals.css";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,7 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <AuthSessionProvider>
+          <NavigationLoader />
           {children}
           <Toaster />
         </AuthSessionProvider>

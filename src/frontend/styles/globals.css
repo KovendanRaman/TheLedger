@@ -130,3 +130,23 @@
     @apply bg-black/20;
   }
 }
+
+@keyframes nav-coin-flip {
+  0%, 100% { transform: rotateY(0deg) scale(1); }
+  50% { transform: rotateY(180deg) scale(0.9); }
+}
+
+@keyframes nav-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes nav-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes nav-dot {
+  0%, 100% { opacity: 0.3; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-3px); }
+}

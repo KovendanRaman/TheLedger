@@ -20,15 +20,5 @@ export const authConfig: NextAuthConfig = {
       if (token.id) session.user.id = token.id as string;
       return session;
     },
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
-      const pathname = nextUrl.pathname;
-      const publicRoutes = ["/login", "/signup", "/view"];
-      const isPublicRoute = publicRoutes.some((r) => pathname.startsWith(r));
-
-      if (pathname === "/") return true; // handled by redirect in middleware
-      if (isPublicRoute) return true;
-      return isLoggedIn;
-    },
   },
 };
