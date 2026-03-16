@@ -40,11 +40,10 @@ export async function addTransaction(formData: FormData) {
   revalidatePath("/expenses");
 }
 
-// ─── Generate invoice ─────────────────────────────────────────
-export async function generateInvoice() {
+// ─── Generate invoice from selected transactions ─────────────
+export async function generateInvoice(transactionIds?: string[]): Promise<string> {
   const userId = await getAuthUserId();
 
-  // Fetch all pending invoicable transactions
   const pendingTxns = await db
     .select()
     .from(transactions)
@@ -60,9 +59,16 @@ export async function generateInvoice() {
     throw new Error("No pending billable transactions to invoice.");
   }
 
-  const total = pendingTxns.reduce((s, t) => s + Number(t.amount), 0);
+  const selected = transactionIds?.length
+    ? pendingTxns.filter((t) => transactionIds.includes(t.id))
+    : pendingTxns;
 
-  // Create the invoice
+  if (selected.length === 0) {
+    throw new Error("None of the selected transactions are eligible.");
+  }
+
+  const total = selected.reduce((s, t) => s + Number(t.amount), 0);
+
   const [invoice] = await db
     .insert(invoices)
     .values({
@@ -73,7 +79,6 @@ export async function generateInvoice() {
     })
     .returning();
 
-  // Bulk update transactions to invoiced
   try {
     await db
       .update(transactions)
@@ -81,17 +86,19 @@ export async function generateInvoice() {
       .where(
         inArray(
           transactions.id,
-          pendingTxns.map((t) => t.id)
+          selected.map((t) => t.id)
         )
       );
-  } catch (err) {
-    // Rollback the invoice if update fails
+  } catch {
     await db.delete(invoices).where(eq(invoices.id, invoice.id));
     throw new Error("Failed to generate invoice. Please try again.");
   }
 
   revalidatePath("/dashboard");
   revalidatePath("/invoices");
+  revalidatePath("/expenses");
+
+  return invoice.id;
 }
 
 // ─── Mark invoice paid ────────────────────────────────────────

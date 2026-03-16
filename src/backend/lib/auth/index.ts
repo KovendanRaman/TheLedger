@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db } from "@/backend/lib/db";
 import { users } from "@/backend/lib/db/schema";
+import { authConfig } from "./config";
 
 // Extend Auth.js types so session.user.id is always present
 declare module "next-auth" {
@@ -17,6 +18,7 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -29,7 +31,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const result = await db
           .select()
           .from(users)
-          .where(eq(users.email, String(credentials.email)))
+          .where(eq(users.email, String(credentials.email).toLowerCase().trim()))
           .limit(1);
 
         const user = result[0];
@@ -45,21 +47,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-
-  session: { strategy: "jwt" },
-
-  pages: {
-    signIn: "/login",
-  },
-
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) token.id = user.id;
-      return token;
-    },
-    session({ session, token }) {
-      if (token.id) session.user.id = token.id as string;
-      return session;
-    },
-  },
 });

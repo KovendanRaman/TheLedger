@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { cn } from "@/backend/lib/utils";
 import type { TransactionStatus } from "@/backend/lib/types/database.types";
 
@@ -24,7 +25,7 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export const StatusBadge = memo(function StatusBadge({ status, className }: StatusBadgeProps) {
   const config = statusConfig[status];
   return (
     <span
@@ -55,4 +56,4 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
       {config.label}
     </span>
   );
-}
+});

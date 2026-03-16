@@ -1,7 +1,6 @@
 import React from "react";
 
-// Force dynamic rendering for all auth routes — Supabase SSR relies on
-// runtime cookies and cannot be statically prerendered.
+// Force dynamic rendering for all auth routes — session checks require runtime cookies.
 export const dynamic = "force-dynamic";
 
 export default function AuthLayout({

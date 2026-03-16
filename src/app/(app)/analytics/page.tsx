@@ -116,10 +116,16 @@ export default function AnalyticsPage() {
   }, [allTxns, period]);
 
   // ─── KPIs ───────────────────────────────────────────────────────────────────
-  const totalSpend = filtered.reduce((s, t) => s + t.amount, 0);
-  const billableTotal = filtered.filter((t) => t.is_invoicable).reduce((s, t) => s + t.amount, 0);
-  const personalTotal = filtered.filter((t) => !t.is_invoicable).reduce((s, t) => s + t.amount, 0);
-  const billablePct = totalSpend > 0 ? Math.round((billableTotal / totalSpend) * 100) : 0;
+  const kpis = useMemo(() => {
+    let total = 0, billable = 0, personal = 0;
+    for (const t of filtered) {
+      total += t.amount;
+      if (t.is_invoicable) billable += t.amount;
+      else personal += t.amount;
+    }
+    return { total, billable, personal, billablePct: total > 0 ? Math.round((billable / total) * 100) : 0 };
+  }, [filtered]);
+  const { total: totalSpend, billable: billableTotal, personal: personalTotal, billablePct } = kpis;
 
   // ─── Monthly trend ──────────────────────────────────────────────────────────
   const monthlyData = useMemo(() => {

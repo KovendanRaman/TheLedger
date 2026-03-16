@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { formatCurrency } from "@/backend/lib/utils";
 import type { Invoice } from "@/backend/lib/types/database.types";
 import { FileText, CheckCircle2 } from "lucide-react";
@@ -9,7 +10,7 @@ interface InvoiceCardProps {
   onMarkPaid?: () => void;
 }
 
-export function InvoiceCard({
+export const InvoiceCard = memo(function InvoiceCard({
   invoice,
   transactionCount,
   onMarkPaid,
@@ -74,4 +75,4 @@ export function InvoiceCard({
       )}
     </div>
   );
-}
+});

@@ -2,22 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { signIn } from "next-auth/react";
 import { Button } from "@/frontend/components/ui/button";
 import { Input } from "@/frontend/components/ui/input";
 import { Label } from "@/frontend/components/ui/label";
-import { Loader2, BookOpen } from "lucide-react";
+import { Loader2, BookOpen, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     setLoading(true);
 
     const result = await signIn("credentials", {
@@ -29,10 +28,9 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      toast.error("Invalid email or password.");
+      setError("No account found with that email, or your password is incorrect. Please try again.");
     } else {
-      router.push("/dashboard");
-      router.refresh();
+      window.location.href = "/dashboard";
     }
   }
 
@@ -55,33 +53,47 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white rounded-[2rem] p-7 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-border/50">
+
+          {error && (
+            <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm leading-snug">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Email</Label>
+              <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="you@university.ac.za"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setError(null); }}
                 className="h-14 bg-secondary/30 border-none shadow-sm rounded-xl px-4 font-medium text-[15px] focus-visible:ring-2 focus-visible:ring-primary/20"
                 required
                 autoComplete="email"
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Password</Label>
+              <Label htmlFor="password" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setError(null); }}
                 className="h-14 bg-secondary/30 border-none shadow-sm rounded-xl px-4 font-medium text-[15px] focus-visible:ring-2 focus-visible:ring-primary/20"
                 required
                 autoComplete="current-password"
               />
             </div>
+
             <Button
               type="submit"
               className="w-full h-14 rounded-full font-bold text-base shadow-lg shadow-primary/25 hover:shadow-xl transition-all gradient-primary mt-2"

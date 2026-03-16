@@ -2,8 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/backend/lib/auth";
 import { getDashboardData } from "@/backend/actions/data";
 import { BottomNav } from "@/frontend/components/bottom-nav";
-import { MoneyFlowChart } from "@/frontend/components/money-flow-chart";
-import { SpendingCategoryChart } from "@/frontend/components/budget-donut-chart";
+import { LazyMoneyFlowChart, LazySpendingCategoryChart } from "@/frontend/components/dashboard-charts";
 import { PageTransition } from "@/frontend/components/page-transition";
 import { formatCurrency } from "@/backend/lib/utils";
 import {
@@ -151,7 +150,7 @@ export default async function DashboardPage() {
                   </select>
                 </div>
               </div>
-              <MoneyFlowChart transactions={txns} />
+              <LazyMoneyFlowChart transactions={txns} />
             </div>
 
             {/* Recent Transactions Simple List */}
@@ -224,7 +223,7 @@ export default async function DashboardPage() {
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
               <h2 className="text-lg font-bold mb-6">Spending by category</h2>
-              <SpendingCategoryChart transactions={txns} />
+              <LazySpendingCategoryChart transactions={txns} />
             </div>
 
           </div>

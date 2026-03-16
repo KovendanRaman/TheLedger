@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { cn } from "@/backend/lib/utils";
 
 interface CategoryBadgeProps {
@@ -6,7 +7,7 @@ interface CategoryBadgeProps {
   className?: string;
 }
 
-export function CategoryBadge({ name, color = "#6366f1", className }: CategoryBadgeProps) {
+export const CategoryBadge = memo(function CategoryBadge({ name, color = "#6366f1", className }: CategoryBadgeProps) {
   return (
     <span
       className={cn(
@@ -21,4 +22,4 @@ export function CategoryBadge({ name, color = "#6366f1", className }: CategoryBa
       {name}
     </span>
   );
-}
+});

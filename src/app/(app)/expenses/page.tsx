@@ -25,6 +25,7 @@ import {
   Tag,
   LayoutGrid,
   Loader2,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/backend/lib/utils";
@@ -189,6 +190,13 @@ export default function ExpensesPage() {
               )}
             </p>
           </div>
+          <Link
+            href="/invoices"
+            className="p-2.5 rounded-full bg-white border border-border/50 shadow-sm hover:bg-secondary transition-colors"
+            title="Statements"
+          >
+            <FileText className="h-5 w-5 text-foreground" />
+          </Link>
           <button
             onClick={() => setShowFilters((v) => !v)}
             className={cn(

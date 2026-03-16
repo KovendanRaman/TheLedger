@@ -6,6 +6,7 @@ import { cn } from "@/backend/lib/utils";
 import {
   LayoutDashboard,
   ArrowLeftRight,
+  FileText,
   PieChart,
   Settings,
   HelpCircle,
@@ -20,6 +21,7 @@ export function Sidebar() {
   const navItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/expenses", icon: ArrowLeftRight, label: "Transactions" },
+    { href: "/invoices", icon: FileText, label: "Statements" },
     { href: "/analytics", icon: PieChart, label: "Analytics" },
     { href: "/settings", icon: Settings, label: "Settings" },
   ];

@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, or, isNull, desc } from "drizzle-orm";
+import { eq, and, or, isNull, desc } from "drizzle-orm";
 import { db } from "@/backend/lib/db";
 import {
   transactions,
@@ -119,6 +119,55 @@ export async function getInvoicesData(): Promise<{
     txnCounts: counts,
     hasPendingInvoicable,
   };
+}
+
+// ─── Pending invoicable transactions ──────────────────────────
+
+export async function getPendingInvoicableTransactions(): Promise<Transaction[]> {
+  const userId = await getAuthUserId();
+  if (!userId) return [];
+
+  const rows = await db
+    .select({
+      id: transactions.id,
+      userId: transactions.userId,
+      amount: transactions.amount,
+      description: transactions.description,
+      categoryId: transactions.categoryId,
+      isInvoicable: transactions.isInvoicable,
+      status: transactions.status,
+      invoiceId: transactions.invoiceId,
+      date: transactions.date,
+      createdAt: transactions.createdAt,
+      categoryName: categories.name,
+      categoryColor: categories.color,
+    })
+    .from(transactions)
+    .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        eq(transactions.isInvoicable, true),
+        eq(transactions.status, "pending")
+      )
+    )
+    .orderBy(desc(transactions.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    user_id: r.userId,
+    amount: Number(r.amount),
+    description: r.description,
+    category_id: r.categoryId,
+    is_invoicable: r.isInvoicable,
+    status: r.status,
+    invoice_id: r.invoiceId,
+    date: r.date,
+    created_at: r.createdAt.toISOString(),
+    categories: r.categoryName
+      ? { name: r.categoryName, color: r.categoryColor! }
+      : null,
+  }));
 }
 
 // ─── Categories ───────────────────────────────────────────────

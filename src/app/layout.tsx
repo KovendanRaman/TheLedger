@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Geist } from "next/font/google";
 import { JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/frontend/components/ui/sonner";
+import { AuthSessionProvider } from "@/frontend/components/session-provider";
 import "@/frontend/styles/globals.css";
 import { cn } from "@/lib/utils";
 
@@ -39,8 +40,10 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        {children}
-        <Toaster />
+        <AuthSessionProvider>
+          {children}
+          <Toaster />
+        </AuthSessionProvider>
       </body>
     </html>
   );

@@ -2,48 +2,48 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { signIn } from "next-auth/react";
 import { registerUser } from "@/backend/actions/auth";
 import { Button } from "@/frontend/components/ui/button";
 import { Input } from "@/frontend/components/ui/input";
 import { Label } from "@/frontend/components/ui/label";
-import { Loader2, BookOpen } from "lucide-react";
+import { Loader2, BookOpen, AlertCircle, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const passwordStrong = password.length >= 8;
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
+    setError(null);
+
+    if (!passwordStrong) {
+      setError("Password must be at least 8 characters.");
       return;
     }
+
     setLoading(true);
 
-    const { error } = await registerUser(fullName, email, password);
-    if (error) {
-      toast.error(error);
+    const { error: regError } = await registerUser(fullName, email, password);
+    if (regError) {
+      setError(regError);
       setLoading(false);
       return;
     }
 
-    // Auto sign in after successful registration
     const result = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
 
     if (result?.error) {
-      toast.error("Account created — please sign in.");
-      router.push("/login");
+      setError("Account created but sign-in failed. Please go to the login page.");
     } else {
-      toast.success("Welcome to The Ledger! 🎉");
-      router.push("/dashboard");
-      router.refresh();
+      window.location.href = "/dashboard";
     }
   }
 
@@ -66,46 +66,81 @@ export default function SignupPage() {
         </div>
 
         <div className="bg-white rounded-[2rem] p-7 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-border/50">
+
+          {error && (
+            <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm leading-snug">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSignup} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="full-name" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Full Name</Label>
+              <Label htmlFor="full-name" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
+                Full Name
+              </Label>
               <Input
                 id="full-name"
                 type="text"
                 placeholder="Thabo Ntuli"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={(e) => { setFullName(e.target.value); setError(null); }}
                 className="h-14 bg-secondary/30 border-none shadow-sm rounded-xl px-4 font-medium text-[15px] focus-visible:ring-2 focus-visible:ring-primary/20"
                 required
                 autoComplete="name"
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Email</Label>
+              <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="you@university.ac.za"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setError(null); }}
                 className="h-14 bg-secondary/30 border-none shadow-sm rounded-xl px-4 font-medium text-[15px] focus-visible:ring-2 focus-visible:ring-primary/20"
                 required
                 autoComplete="email"
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Min 8 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-14 bg-secondary/30 border-none shadow-sm rounded-xl px-4 font-medium text-[15px] focus-visible:ring-2 focus-visible:ring-primary/20"
-                required
-                autoComplete="new-password"
-              />
+              <Label htmlFor="password" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
+                Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Min 8 characters"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(null); }}
+                  className={cn(
+                    "h-14 bg-secondary/30 border-none shadow-sm rounded-xl px-4 font-medium text-[15px] focus-visible:ring-2 focus-visible:ring-primary/20",
+                    password.length > 0 && !passwordStrong && "ring-2 ring-red-300"
+                  )}
+                  required
+                  autoComplete="new-password"
+                />
+                {password.length > 0 && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    {passwordStrong
+                      ? <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      : <AlertCircle className="h-5 w-5 text-red-400" />
+                    }
+                  </div>
+                )}
+              </div>
+              {password.length > 0 && !passwordStrong && (
+                <p className="text-xs text-red-500 font-medium pl-1">
+                  {8 - password.length} more character{8 - password.length !== 1 ? "s" : ""} needed
+                </p>
+              )}
             </div>
+
             <Button
               type="submit"
               className="w-full h-14 rounded-full font-bold text-base shadow-lg shadow-primary/25 hover:shadow-xl transition-all gradient-primary mt-2"

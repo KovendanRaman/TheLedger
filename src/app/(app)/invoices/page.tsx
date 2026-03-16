@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useCallback } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
-import { generateInvoice, markInvoicePaid } from "@/backend/actions/transactions";
+import { markInvoicePaid } from "@/backend/actions/transactions";
 import { getInvoicesData } from "@/backend/actions/data";
 import { InvoiceCard } from "@/frontend/components/invoice-card";
 import { BottomNav } from "@/frontend/components/bottom-nav";
@@ -14,17 +15,7 @@ import {
   getMockTxnCountByInvoice,
 } from "@/backend/lib/mock-data";
 import type { Invoice, InvoiceStatus, TransactionStatus } from "@/backend/lib/types/database.types";
-import { Button } from "@/frontend/components/ui/button";
-import { Loader2, Sparkles, FileText } from "lucide-react";
-
-type InvoiceRow = {
-  id: string;
-  user_id: string;
-  month_label: string;
-  total_amount: number;
-  status: InvoiceStatus;
-  generated_at: string;
-};
+import { Loader2, FileText, Plus } from "lucide-react";
 
 type TxnMini = {
   id: string;
@@ -63,80 +54,65 @@ export default function InvoicesPage() {
     loadData();
   }, []);
 
-  function handleGenerate() {
+  const handleMarkPaid = useCallback(function handleMarkPaid(invoiceId: string) {
     if (IS_MOCK_MODE) {
-      toast.success("[Mock] Statement generated! In real mode this would invoice transactions. 📄");
-      return;
-    }
-    startTransition(async () => {
-      try {
-        await generateInvoice();
-        toast.success("Statement generated! Share the link with your parents. 📄");
-        await loadData();
-      } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : "Could not generate invoice.");
-      }
-    });
-  }
-
-  function handleMarkPaid(invoiceId: string) {
-    if (IS_MOCK_MODE) {
-      toast.success("[Mock] Payment recorded! ✅");
+      toast.success("[Mock] Payment recorded!");
       return;
     }
     startTransition(async () => {
       try {
         await markInvoicePaid(invoiceId);
-        toast.success("Payment recorded! All done. ✅");
+        toast.success("Payment recorded!");
         await loadData();
       } catch (err: unknown) {
         toast.error(err instanceof Error ? err.message : "Could not mark as paid.");
       }
     });
-  }
+  }, [startTransition]);
 
   return (
-    <PageTransition className="min-h-screen bg-background pb-32">
+    <PageTransition className="min-h-screen bg-[#F4F5FB] pb-32">
       {/* Header */}
-      <div className="px-5 pt-14 pb-6">
-        <h1 className="text-[28px] font-bold text-foreground tracking-tight">Invoices</h1>
-        <p className="text-sm font-medium text-muted-foreground mt-1">
-          Generate & track parent statements
-        </p>
+      <div className="flex items-end justify-between px-5 pt-14 pb-6">
+        <div>
+          <h1 className="text-[28px] font-bold text-foreground tracking-tight">Statements</h1>
+          <p className="text-sm font-medium text-muted-foreground mt-1">
+            Create &amp; track parent invoices
+          </p>
+        </div>
+        <Link
+          href="/invoices/new"
+          className="flex items-center gap-2 px-5 py-2.5 text-white rounded-full text-sm font-semibold shadow-md hover:opacity-90 transition-opacity"
+          style={{ backgroundColor: "#6366f1" }}
+        >
+          <Plus className="w-4 h-4" />
+          New Statement
+        </Link>
       </div>
 
-      {/* Generate CTA */}
-      <div className="px-5 mb-8">
-        <div className="p-5 rounded-[1.5rem] border border-border/50 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 rounded-2xl bg-primary/10">
-              <Sparkles className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-[15px] font-bold text-foreground">
-                Generate Statement
-              </p>
-              <p className="text-[13px] font-medium text-muted-foreground mt-0.5">
-                {hasPendingInvoicable
-                  ? "You have unprocessed billable items"
-                  : "No pending billable items"}
-              </p>
-            </div>
-          </div>
-          <Button
-            onClick={handleGenerate}
-            disabled={!hasPendingInvoicable || isPending}
-            className="w-full h-12 rounded-xl font-bold tracking-wide"
-            variant={hasPendingInvoicable ? "default" : "secondary"}
+      {/* Pending CTA if there are billable items */}
+      {!loading && hasPendingInvoicable && (
+        <div className="px-5 mb-6">
+          <Link
+            href="/invoices/new"
+            className="block p-5 rounded-[1.5rem] border border-dashed border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors"
           >
-            {isPending ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              "Generate New Statement"
-            )}
-          </Button>
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-primary/10">
+                <Plus className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-[15px] font-bold text-foreground">
+                  Create New Statement
+                </p>
+                <p className="text-[13px] font-medium text-muted-foreground mt-0.5">
+                  You have pending billable transactions ready to invoice
+                </p>
+              </div>
+            </div>
+          </Link>
         </div>
-      </div>
+      )}
 
       {/* Invoice List */}
       <div className="px-5">
@@ -157,7 +133,7 @@ export default function InvoicesPage() {
             </div>
             <p className="text-foreground font-semibold">No statements yet</p>
             <p className="text-muted-foreground text-[13px] mt-1 px-4">
-              Add invoicable expenses and generate your first statement
+              Add billable expenses and create your first statement
             </p>
           </div>
         ) : (
@@ -178,7 +154,7 @@ export default function InvoicesPage() {
         )}
       </div>
 
-      <BottomNav />
+      <BottomNav className="lg:hidden" />
     </PageTransition>
   );
 }

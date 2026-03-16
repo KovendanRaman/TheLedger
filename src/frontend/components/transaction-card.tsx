@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { formatCurrency, formatDate } from "@/backend/lib/utils";
 import { StatusBadge } from "@/frontend/components/status-badge";
 import { CategoryBadge } from "@/frontend/components/category-badge";
@@ -8,7 +9,7 @@ interface TransactionCardProps {
   transaction: Transaction;
 }
 
-export function TransactionCard({ transaction }: TransactionCardProps) {
+export const TransactionCard = memo(function TransactionCard({ transaction }: TransactionCardProps) {
   const category = transaction.categories;
 
   return (
@@ -57,4 +58,4 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
       </div>
     </div>
   );
-}
+});
