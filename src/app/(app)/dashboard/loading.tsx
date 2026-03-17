@@ -14,7 +14,7 @@ export default function DashboardLoading() {
         </div>
       </div>
 
-      <div className="px-6 md:px-10 max-w-7xl mx-auto space-y-6">
+      <div className="px-6 md:px-10 space-y-6">
 
         {/* Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-4">

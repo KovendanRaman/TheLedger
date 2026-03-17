@@ -178,9 +178,9 @@ export default function AnalyticsPage() {
   const isEmpty = !loading && filtered.length === 0;
 
   return (
-    <PageTransition className="min-h-screen bg-background pb-32 lg:pb-16">
+    <PageTransition className="min-h-screen bg-background pb-36 lg:pb-16">
       {/* ── Header ── */}
-      <div className="px-5 pt-14 pb-6">
+      <div className="px-4 sm:px-5 pt-14 pb-6">
         <div className="flex items-center gap-3 mb-6">
           <Link
             href="/dashboard"
@@ -220,7 +220,7 @@ export default function AnalyticsPage() {
       </div>
 
       {loading ? (
-        <div className="px-5 space-y-4">
+        <div className="px-4 sm:px-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <SkeletonCard className="h-28" />
             <SkeletonCard className="h-28" />
@@ -242,7 +242,7 @@ export default function AnalyticsPage() {
           </p>
         </div>
       ) : (
-        <div className="px-5 space-y-5">
+        <div className="px-4 sm:px-5 space-y-4">
 
           {/* ── KPI cards ── */}
           <div className="grid grid-cols-2 gap-3">
@@ -300,7 +300,7 @@ export default function AnalyticsPage() {
 
           {/* ── Spending Trend ── */}
           {monthlyData.length > 0 && (
-            <div className="p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
+            <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-[15px] font-bold text-foreground">Spending Trend</p>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -308,31 +308,32 @@ export default function AnalyticsPage() {
               <p className="text-[12px] font-medium text-muted-foreground mb-4">
                 Personal vs billable by month
               </p>
-              <div className="h-[220px]">
+              <div className="h-[200px] sm:h-[220px] w-full overflow-hidden">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }} barGap={4}>
+                  <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: -24, bottom: 0 }} barGap={4}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                     <XAxis
                       dataKey="label"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#94A3B8", fontSize: 11, fontWeight: 500 }}
+                      tick={{ fill: "#94A3B8", fontSize: 10, fontWeight: 500 }}
                       dy={8}
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#94A3B8", fontSize: 11, fontWeight: 500 }}
+                      tick={{ fill: "#94A3B8", fontSize: 10, fontWeight: 500 }}
                       tickFormatter={(v) => `R${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                      width={44}
                     />
                     <Tooltip content={<BarTooltip />} cursor={{ fill: "#F8FAFC", radius: 8 }} />
-                    <Bar dataKey="personal" name="Personal" fill="#8B5CF6" radius={[4, 4, 4, 4]} barSize={14} />
-                    <Bar dataKey="billable" name="Billable" fill="#C4B5FD" radius={[4, 4, 4, 4]} barSize={14} />
+                    <Bar dataKey="personal" name="Personal" fill="#8B5CF6" radius={[4, 4, 4, 4]} barSize={12} />
+                    <Bar dataKey="billable" name="Billable" fill="#C4B5FD" radius={[4, 4, 4, 4]} barSize={12} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
               {/* Legend */}
-              <div className="flex justify-center gap-6 mt-1">
+              <div className="flex justify-center gap-6 mt-2">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
                   <span className="text-[11px] font-semibold text-muted-foreground">Personal</span>
@@ -347,25 +348,21 @@ export default function AnalyticsPage() {
 
           {/* ── Category Breakdown ── */}
           {categoryData.length > 0 && (
-            <div className="p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-[15px] font-bold text-foreground">By Category</p>
-                  <p className="text-[12px] font-medium text-muted-foreground mt-0.5">Top spending categories</p>
-                </div>
-              </div>
+            <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
+              <p className="text-[15px] font-bold text-foreground mb-0.5">By Category</p>
+              <p className="text-[12px] font-medium text-muted-foreground mb-4">Top spending categories</p>
 
-              <div className="flex items-center gap-4">
-                {/* Donut */}
-                <div className="relative w-[130px] h-[130px] flex-shrink-0">
+              {/* Donut centered + list below on mobile, side-by-side on sm+ */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="relative w-[140px] h-[140px] mx-auto sm:mx-0 flex-shrink-0">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={categoryData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={45}
-                        outerRadius={65}
+                        innerRadius={48}
+                        outerRadius={68}
                         paddingAngle={4}
                         dataKey="amount"
                         stroke="none"
@@ -379,9 +376,7 @@ export default function AnalyticsPage() {
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">
-                      Total
-                    </span>
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">Total</span>
                     <span className="text-[14px] font-bold text-foreground leading-none">
                       R{(categoryData.reduce((s, c) => s + c.amount, 0) / 1000).toFixed(1)}k
                     </span>
@@ -418,12 +413,12 @@ export default function AnalyticsPage() {
           )}
 
           {/* ── Status Overview ── */}
-          <div className="p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
+          <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
             <p className="text-[15px] font-bold text-foreground mb-1">Status Overview</p>
             <p className="text-[12px] font-medium text-muted-foreground mb-4">
               Where your money stands
             </p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {[
                 {
                   label: "Pending",
@@ -453,17 +448,17 @@ export default function AnalyticsPage() {
                   text: "text-emerald-600",
                 },
               ].map(({ label, amount, count, icon: Icon, color, bg, text }) => (
-                <div key={label} className={cn("rounded-[1.25rem] p-3.5", bg)}>
-                  <div className={cn("w-7 h-7 rounded-full bg-white flex items-center justify-center mb-2.5 shadow-sm")}>
+                <div key={label} className={cn("rounded-[1.25rem] p-3 sm:p-3.5", bg)}>
+                  <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center mb-2 shadow-sm">
                     <Icon className={cn("h-3.5 w-3.5", text)} />
                   </div>
-                  <p className={cn("text-[11px] font-bold uppercase tracking-widest leading-none mb-1.5", text)}>
+                  <p className={cn("text-[10px] sm:text-[11px] font-bold uppercase tracking-wider leading-none mb-1.5", text)}>
                     {label}
                   </p>
-                  <p className="text-[15px] font-bold text-foreground leading-none">
-                    R{(amount / 1000).toFixed(1)}k
+                  <p className="text-[13px] sm:text-[15px] font-bold text-foreground leading-none">
+                    {formatCurrency(amount)}
                   </p>
-                  <p className="text-[11px] font-medium text-muted-foreground mt-1">
+                  <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground mt-1">
                     {count} txn{count !== 1 ? "s" : ""}
                   </p>
                 </div>
@@ -473,7 +468,7 @@ export default function AnalyticsPage() {
 
           {/* ── Top Transactions ── */}
           {topTxns.length > 0 && (
-            <div className="p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
+            <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-[15px] font-bold text-foreground">Biggest Expenses</p>

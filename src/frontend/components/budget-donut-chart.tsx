@@ -3,29 +3,26 @@
 import { useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import type { Transaction } from "@/backend/lib/types/database.types";
-import { MOCK_CATEGORIES } from "@/backend/lib/mock-data";
 
 export function SpendingCategoryChart({ transactions }: { transactions: Transaction[] }) {
   const data = useMemo(() => {
-    const totals: Record<string, number> = {};
-    
+    // Group by category using the joined `categories` object on each transaction
+    const totals: Record<string, { name: string; color: string; value: number }> = {};
+
     transactions.forEach((t) => {
-      if (t.category_id) {
-        totals[t.category_id] = (totals[t.category_id] || 0) + t.amount;
+      const id = t.category_id;
+      if (!id) return;
+      const name = t.categories?.name ?? "Unknown";
+      const color = t.categories?.color ?? "#cbd5e1";
+      if (!totals[id]) {
+        totals[id] = { name, color, value: 0 };
       }
+      totals[id].value += t.amount;
     });
 
-    return Object.entries(totals)
-      .map(([id, amount]) => {
-        const cat = MOCK_CATEGORIES.find((c) => c.id === id);
-        return {
-          name: cat?.name || "Unknown",
-          value: amount,
-          color: cat?.color || "#cbd5e1",
-        };
-      })
+    return Object.values(totals)
       .sort((a, b) => b.value - a.value)
-      .slice(0, 5); // Top 5 categories
+      .slice(0, 5);
   }, [transactions]);
 
   const totalAmount = data.reduce((sum, item) => sum + item.value, 0);
@@ -46,9 +43,9 @@ export function SpendingCategoryChart({ transactions }: { transactions: Transact
   };
 
   return (
-    <div className="flex flex-col xl:flex-row items-center justify-between gap-6 h-[220px]">
-      {/* Legend on the Left */}
-      <div className="flex-1 space-y-3 w-full max-w-[160px]">
+    <div className="flex flex-row items-center gap-4">
+      {/* Legend */}
+      <div className="flex-1 space-y-2.5 min-w-0">
         {data.map((entry, index) => (
           <div key={`legend-${index}`} className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
@@ -57,16 +54,16 @@ export function SpendingCategoryChart({ transactions }: { transactions: Transact
         ))}
       </div>
 
-      {/* Donut Chart on the Right */}
-      <div className="relative w-[150px] h-[150px] flex-shrink-0">
+      {/* Donut Chart */}
+      <div className="relative w-[140px] h-[140px] flex-shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={55}
-              outerRadius={75}
+              innerRadius={48}
+              outerRadius={68}
               paddingAngle={4}
               dataKey="value"
               stroke="none"
@@ -79,13 +76,13 @@ export function SpendingCategoryChart({ transactions }: { transactions: Transact
             <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
-        
+
         {/* Center Text */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-1">
-          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">
-            Total for month
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">
+            Total
           </span>
-          <span className="text-lg font-bold text-foreground leading-none">
+          <span className="text-[15px] font-bold text-foreground leading-none">
             R {totalAmount.toLocaleString("en-ZA")}
           </span>
         </div>

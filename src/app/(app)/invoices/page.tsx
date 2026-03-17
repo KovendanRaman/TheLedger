@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition, useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { markInvoicePaid } from "@/backend/actions/transactions";
+import { markInvoicePaid, revokeInvoice } from "@/backend/actions/transactions";
 import { getInvoicesData } from "@/backend/actions/data";
 import { InvoiceCard } from "@/frontend/components/invoice-card";
 import { BottomNav } from "@/frontend/components/bottom-nav";
@@ -66,6 +66,22 @@ export default function InvoicesPage() {
         await loadData();
       } catch (err: unknown) {
         toast.error(err instanceof Error ? err.message : "Could not mark as paid.");
+      }
+    });
+  }, [startTransition]);
+
+  const handleRevoke = useCallback(function handleRevoke(invoiceId: string) {
+    if (IS_MOCK_MODE) {
+      toast.success("[Mock] Statement revoked — transactions returned to pending.");
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await revokeInvoice(invoiceId);
+        toast.success("Statement revoked. Transactions returned to pending.");
+        await loadData();
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "Could not revoke statement.");
       }
     });
   }, [startTransition]);
@@ -146,6 +162,11 @@ export default function InvoicesPage() {
                 onMarkPaid={
                   inv.status === "open"
                     ? () => handleMarkPaid(inv.id)
+                    : undefined
+                }
+                onRevoke={
+                  inv.status === "open"
+                    ? () => handleRevoke(inv.id)
                     : undefined
                 }
               />

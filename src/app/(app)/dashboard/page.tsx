@@ -13,6 +13,7 @@ import {
 } from "@/backend/lib/mock-data";
 import type { Transaction } from "@/backend/lib/types/database.types";
 import { Calendar, Plus, ArrowUpRight, Wallet, ArrowRight } from "lucide-react";
+import { CategoryBadge } from "@/frontend/components/category-badge";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
 
@@ -48,85 +49,81 @@ export default async function DashboardPage() {
   return (
     <PageTransition className="min-h-screen bg-[#F4F5FB] pb-32 md:pb-12 text-foreground">
       
-      {/* Top Navigation Bar (FinSet Style) */}
-      <div className="flex flex-col-reverse md:flex-row md:items-center justify-between gap-4 px-6 md:px-10 pt-10 md:pt-10 pb-6">
-        <div>
-          <h1 className="text-[28px] md:text-[32px] font-bold tracking-tight">Welcome back, {firstName}!</h1>
-          <p className="text-muted-foreground text-[15px] mt-1">Track your expenses and send invoices to your parents.</p>
+      {/* Top Navigation Bar */}
+      <div className="flex flex-row items-center justify-between gap-3 px-4 sm:px-6 md:px-10 pt-10 pb-5">
+        <div className="min-w-0">
+          <h1 className="text-[22px] sm:text-[28px] md:text-[32px] font-bold tracking-tight truncate">Welcome back, {firstName}!</h1>
+          <p className="text-muted-foreground text-[13px] sm:text-[15px] mt-0.5 hidden sm:block">Track your expenses and send invoices to your parents.</p>
         </div>
         
         <div className="flex items-center gap-3 self-end md:self-auto">
-          <div className="flex items-center gap-3 bg-white pl-2 pr-4 py-1.5 rounded-full border border-border/40 shadow-sm">
+          <Link
+            href="/settings"
+            className="flex items-center gap-3 bg-white pl-2 pr-4 py-1.5 rounded-full border border-border/40 shadow-sm hover:border-primary/40 hover:shadow-md transition-all"
+          >
             <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: 'rgba(99,102,241,0.12)', color: '#6366f1' }}>
               {firstName[0]}
             </div>
             <div className="hidden sm:block">
               <p className="text-sm font-bold leading-tight">{fullName ?? "Student"}</p>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
 
       {/* Main Dashboard Content */}
-      <div className="px-6 md:px-10 max-w-7xl mx-auto space-y-6">
-        
+      <div className="px-4 sm:px-6 md:px-10 space-y-5">
+
         {/* Controls Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 bg-white px-4 py-2.5 border border-border/40 rounded-full shadow-sm text-sm font-semibold">
             <Calendar className="w-4 h-4 text-muted-foreground" />
             <span>This month</span>
           </div>
-
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-             <Link href="/add" className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 text-white rounded-full text-sm font-semibold transition-all shadow-[0_4px_12px_rgba(99,102,241,0.3)] hover:opacity-90 hover:shadow-[0_6px_16px_rgba(99,102,241,0.4)]" style={{ backgroundColor: '#6366f1' }}>
-               <Plus className="w-4 h-4" />
-               Add transaction
-             </Link>
-          </div>
+          <Link href="/add" className="flex items-center gap-2 px-5 py-2.5 text-white rounded-full text-sm font-semibold transition-all shadow-[0_4px_12px_rgba(99,102,241,0.3)] hover:opacity-90" style={{ backgroundColor: '#6366f1' }}>
+            <Plus className="w-4 h-4" />
+            <span>Add</span>
+          </Link>
         </div>
 
         {/* 3 Summary Cards Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="grid grid-cols-3 gap-3 sm:gap-5">
           {/* Card 1: Total Spend */}
-          <div className="bg-white p-5 rounded-3xl border border-border/40 shadow-sm relative group">
-            <Link href="/analytics" className="absolute top-5 right-5 w-8 h-8 rounded-full border border-border/60 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 transition-colors">
-              <ArrowUpRight className="w-4 h-4" />
+          <div className="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 shadow-sm relative group">
+            <Link href="/analytics" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 transition-colors">
+              <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
-            <h3 className="font-bold text-[15px] mb-4">Total spent</h3>
-            <p className="text-3xl font-bold tracking-tight mb-4">
-              <span className="text-[20px] text-muted-foreground font-semibold pr-1">R</span>{totalSpend.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+            <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Spent</h3>
+            <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-4 leading-none">
+              <span className="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5">R</span>{totalSpend.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
             </p>
-            <p className="text-[13px] font-semibold text-muted-foreground">
+            <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">
               {txns.length} transaction{txns.length !== 1 ? "s" : ""}
             </p>
           </div>
 
-          {/* Card 2: Billable / Pending invoice */}
-          <div className="bg-white p-5 rounded-3xl border border-border/40 shadow-sm relative group">
-            <Link href="/invoices" className="absolute top-5 right-5 w-8 h-8 rounded-full border border-border/60 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 transition-colors">
-              <ArrowUpRight className="w-4 h-4" />
+          {/* Card 2: Billable */}
+          <div className="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 shadow-sm relative group">
+            <Link href="/invoices" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 transition-colors">
+              <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
-            <h3 className="font-bold text-[15px] mb-4">Billable</h3>
-            <p className="text-3xl font-bold tracking-tight mb-4">
-               <span className="text-[20px] text-muted-foreground font-semibold pr-1">R</span>{invoicableTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+            <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Billable</h3>
+            <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-4 leading-none">
+              <span className="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5">R</span>{invoicableTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
             </p>
-            <p className="text-[13px] font-semibold text-muted-foreground">
-              Pending invoice
-            </p>
+            <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">Pending invoice</p>
           </div>
 
           {/* Card 3: Paid out */}
-          <div className="bg-white p-5 rounded-3xl border border-border/40 shadow-sm relative group">
-            <Link href="/expenses" className="absolute top-5 right-5 w-8 h-8 rounded-full border border-border/60 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 transition-colors">
-              <ArrowUpRight className="w-4 h-4" />
+          <div className="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 shadow-sm relative group">
+            <Link href="/expenses" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 transition-colors">
+              <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
-            <h3 className="font-bold text-[15px] mb-4">Paid out</h3>
-            <p className="text-3xl font-bold tracking-tight mb-4">
-              <span className="text-[20px] text-muted-foreground font-semibold pr-1">R</span>{paidTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+            <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Paid</h3>
+            <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-4 leading-none">
+              <span className="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5">R</span>{paidTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
             </p>
-            <p className="text-[13px] font-semibold text-muted-foreground">
-              {pendingCount} still pending
-            </p>
+            <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">{pendingCount} still pending</p>
           </div>
         </div>
 
@@ -153,59 +150,87 @@ export default async function DashboardPage() {
               <LazyMoneyFlowChart transactions={txns} />
             </div>
 
-            {/* Recent Transactions Simple List */}
-            <div className="bg-white px-6 py-6 rounded-[2rem] border border-border/40 shadow-sm">
-              <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-lg font-bold">Recent transactions</h2>
-                 <Link href="/expenses" className="flex items-center gap-2 px-4 py-2 bg-muted/30 rounded-full text-sm font-semibold hover:bg-muted/50 transition-colors">
-                   See all <ArrowRight className="w-3.5 h-3.5" />
-                 </Link>
+            {/* Recent Transactions */}
+            <div className="bg-white px-4 sm:px-6 py-5 rounded-[2rem] border border-border/40 shadow-sm">
+              <div className="flex justify-between items-center mb-5">
+                <h2 className="text-lg font-bold">Recent transactions</h2>
+                <Link href="/expenses" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 rounded-full text-sm font-semibold hover:bg-muted/50 transition-colors">
+                  See all <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[500px]">
+              {/* Mobile card list */}
+              <div className="md:hidden space-y-1">
+                {txns.slice(0, 5).map((txn) => {
+                  const category = txn.categories || MOCK_CATEGORIES.find(c => c.id === txn.category_id);
+                  const dateLabel = format(parseISO((txn.date || txn.created_at).split("T")[0]), "dd MMM");
+                  return (
+                    <div key={txn.id} className="flex items-center gap-3 py-3 border-b border-border/20 last:border-0">
+                      <div
+                        className="w-10 h-10 rounded-[0.75rem] flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: category?.color ? `${category.color}18` : "#6366f118" }}
+                      >
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category?.color ?? "#6366f1" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-bold text-foreground truncate">{txn.description}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {category && <CategoryBadge name={category.name} color={category.color} size="sm" variant="soft" className="shadow-none" />}
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-[14px] font-bold font-mono">R {txn.amount.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{dateLabel}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden md:block">
+                <table className="w-full">
                   <thead>
                     <tr className="border-b border-border/40 text-[11px] font-bold text-muted-foreground uppercase tracking-wider text-left">
                       <th className="pb-3 px-2">Date</th>
                       <th className="pb-3 px-2">Amount</th>
-                      <th className="pb-3 px-2">Payment Name</th>
+                      <th className="pb-3 px-2">Description</th>
                       <th className="pb-3 px-2">Status</th>
                       <th className="pb-3 px-2 text-right">Category</th>
                     </tr>
                   </thead>
                   <tbody>
                     {txns.slice(0, 5).map((txn) => {
-                       const category = txn.categories || MOCK_CATEGORIES.find(c => c.id === txn.category_id);
-                       const dateLabel = format(parseISO(txn.date || txn.created_at), "dd MMM HH:mm");
-                       
-                       return (
+                      const category = txn.categories || MOCK_CATEGORIES.find(c => c.id === txn.category_id);
+                      const dateLabel = format(parseISO((txn.date || txn.created_at).split("T")[0]), "dd MMM yyyy");
+                      return (
                         <tr key={txn.id} className="border-b border-border/30 last:border-0 hover:bg-muted/10 transition-colors">
-                          <td className="py-4 px-2 text-[13px] font-semibold text-muted-foreground whitespace-nowrap">{dateLabel}</td>
-                          <td className="py-4 px-2 text-[14px] font-bold">
-                            R {txn.amount.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
-                          </td>
-                          <td className="py-4 px-2">
+                          <td className="py-3.5 px-2 text-[13px] font-semibold text-muted-foreground whitespace-nowrap">{dateLabel}</td>
+                          <td className="py-3.5 px-2 text-[14px] font-bold whitespace-nowrap">R {txn.amount.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</td>
+                          <td className="py-3.5 px-2">
                             <div className="flex items-center gap-3">
-                               <div className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
-                                 <Wallet className="w-4 h-4 text-primary" />
-                               </div>
-                               <span className="text-[14px] font-bold text-foreground truncate max-w-[150px]">{txn.description}</span>
+                              <div className="w-7 h-7 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
+                                <Wallet className="w-3.5 h-3.5 text-primary" />
+                              </div>
+                              <span className="text-[14px] font-bold text-foreground truncate max-w-[140px]">{txn.description}</span>
                             </div>
                           </td>
-                          <td className="py-4 px-2">
+                          <td className="py-3.5 px-2">
                             {txn.is_invoicable ? (
-                              <span className={`text-[11px] font-bold px-2 py-1 rounded capitalize ${txn.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-primary/10 text-primary'}`}>
-                                {txn.status}
-                              </span>
+                              <span className={`text-[11px] font-bold px-2 py-1 rounded-md capitalize ${txn.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-primary/10 text-primary'}`}>{txn.status}</span>
                             ) : (
-                              <span className="text-[11px] font-bold px-2 py-1 rounded bg-muted text-muted-foreground">Personal</span>
+                              <span className="text-[11px] font-bold px-2 py-1 rounded-md bg-muted text-muted-foreground">Personal</span>
                             )}
                           </td>
-                          <td className="py-4 px-2 text-right text-[13px] font-semibold text-muted-foreground">
-                            {category?.name || "Uncategorized"}
+                          <td className="py-3.5 px-2 text-right">
+                            {category ? (
+                              <CategoryBadge name={category.name} color={category.color} size="sm" variant="soft" />
+                            ) : (
+                              <span className="text-[12px] font-medium text-muted-foreground">Uncategorized</span>
+                            )}
                           </td>
                         </tr>
-                      )
+                      );
                     })}
                   </tbody>
                 </table>

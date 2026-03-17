@@ -170,6 +170,52 @@ export async function getPendingInvoicableTransactions(): Promise<Transaction[]>
   }));
 }
 
+// ─── Single transaction ────────────────────────────────────────
+
+export async function getTransactionById(id: string): Promise<Transaction | null> {
+  const userId = await getAuthUserId();
+  if (!userId) return null;
+
+  const rows = await db
+    .select({
+      id: transactions.id,
+      userId: transactions.userId,
+      amount: transactions.amount,
+      description: transactions.description,
+      categoryId: transactions.categoryId,
+      isInvoicable: transactions.isInvoicable,
+      status: transactions.status,
+      invoiceId: transactions.invoiceId,
+      date: transactions.date,
+      createdAt: transactions.createdAt,
+      categoryName: categories.name,
+      categoryColor: categories.color,
+    })
+    .from(transactions)
+    .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
+    .limit(1);
+
+  const r = rows[0];
+  if (!r) return null;
+
+  return {
+    id: r.id,
+    user_id: r.userId,
+    amount: Number(r.amount),
+    description: r.description,
+    category_id: r.categoryId,
+    is_invoicable: r.isInvoicable,
+    status: r.status,
+    invoice_id: r.invoiceId,
+    date: r.date,
+    created_at: r.createdAt.toISOString(),
+    categories: r.categoryName
+      ? { name: r.categoryName, color: r.categoryColor! }
+      : null,
+  };
+}
+
 // ─── Categories ───────────────────────────────────────────────
 
 export async function getCategories(): Promise<Category[]> {
@@ -257,6 +303,84 @@ export async function getDashboardData(userId: string) {
       ? { name: r.categoryName, color: r.categoryColor! }
       : null,
   }));
+}
+
+// ─── Invoice with transactions (for PDF print view) ──────────
+
+export async function getInvoiceWithTransactions(invoiceId: string): Promise<{
+  invoice: Invoice;
+  txns: Transaction[];
+  profile: UserProfile | null;
+} | null> {
+  const userId = await getAuthUserId();
+  if (!userId) return null;
+
+  const [invRows, txnRows, profileRows] = await Promise.all([
+    db
+      .select()
+      .from(invoices)
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.userId, userId)))
+      .limit(1),
+    db
+      .select({
+        id: transactions.id,
+        userId: transactions.userId,
+        amount: transactions.amount,
+        description: transactions.description,
+        categoryId: transactions.categoryId,
+        isInvoicable: transactions.isInvoicable,
+        status: transactions.status,
+        invoiceId: transactions.invoiceId,
+        date: transactions.date,
+        createdAt: transactions.createdAt,
+        categoryName: categories.name,
+        categoryColor: categories.color,
+      })
+      .from(transactions)
+      .leftJoin(categories, eq(transactions.categoryId, categories.id))
+      .where(eq(transactions.invoiceId, invoiceId))
+      .orderBy(transactions.date),
+    db
+      .select({ id: users.id, email: users.email, fullName: users.fullName, isSharingEnabled: users.isSharingEnabled })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
+  ]);
+
+  const inv = invRows[0];
+  if (!inv) return null;
+
+  return {
+    invoice: {
+      id: inv.id,
+      user_id: inv.userId,
+      month_label: inv.monthLabel,
+      total_amount: Number(inv.totalAmount),
+      status: inv.status,
+      generated_at: inv.generatedAt.toISOString(),
+    },
+    txns: txnRows.map((r) => ({
+      id: r.id,
+      user_id: r.userId,
+      amount: Number(r.amount),
+      description: r.description,
+      category_id: r.categoryId,
+      is_invoicable: r.isInvoicable,
+      status: r.status,
+      invoice_id: r.invoiceId,
+      date: r.date,
+      created_at: r.createdAt.toISOString(),
+      categories: r.categoryName ? { name: r.categoryName, color: r.categoryColor! } : null,
+    })),
+    profile: profileRows[0]
+      ? {
+          id: profileRows[0].id,
+          email: profileRows[0].email,
+          full_name: profileRows[0].fullName,
+          is_sharing_enabled: profileRows[0].isSharingEnabled,
+        }
+      : null,
+  };
 }
 
 // ─── Parental links ───────────────────────────────────────────

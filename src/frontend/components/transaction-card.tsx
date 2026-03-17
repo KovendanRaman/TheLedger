@@ -3,7 +3,8 @@ import { formatCurrency, formatDate } from "@/backend/lib/utils";
 import { StatusBadge } from "@/frontend/components/status-badge";
 import { CategoryBadge } from "@/frontend/components/category-badge";
 import type { Transaction } from "@/backend/lib/types/database.types";
-import { Receipt } from "lucide-react";
+import { Receipt, Pencil } from "lucide-react";
+import Link from "next/link";
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -18,9 +19,7 @@ export const TransactionCard = memo(function TransactionCard({ transaction }: Tr
       <div
         className="flex-shrink-0 w-12 h-12 rounded-[1rem] flex items-center justify-center"
         style={{
-          backgroundColor: category?.color
-            ? `${category.color}15`
-            : "#6366f115",
+          backgroundColor: category?.color ? `${category.color}15` : "#6366f115",
         }}
       >
         <div
@@ -36,7 +35,12 @@ export const TransactionCard = memo(function TransactionCard({ transaction }: Tr
         </p>
         <div className="flex items-center gap-2 mt-1.5 flex-wrap pl-1">
           {category && (
-            <CategoryBadge name={category.name} color={category.color} />
+            <CategoryBadge
+              name={category.name}
+              color={category.color}
+              size="sm"
+              className="shadow-none"
+            />
           )}
           <StatusBadge status={transaction.status} />
           {transaction.is_invoicable && (
@@ -47,14 +51,22 @@ export const TransactionCard = memo(function TransactionCard({ transaction }: Tr
           )}
         </div>
       </div>
-      
-      <div className="flex flex-col items-end gap-1">
+
+      <div className="flex flex-col items-end gap-1.5">
         <span className="text-[15px] font-bold font-mono text-foreground whitespace-nowrap">
           {formatCurrency(transaction.amount)}
         </span>
         <span className="text-xs font-medium text-muted-foreground">
-           {formatDate(transaction.date)}
+          {formatDate(transaction.date)}
         </span>
+        <Link
+          href={`/expenses/${transaction.id}/edit`}
+          className="mt-0.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border border-border/60 text-muted-foreground bg-white shadow-sm hover:border-primary hover:text-primary hover:shadow-primary/20 hover:shadow-md transition-all"
+          title="Edit transaction"
+        >
+          <Pencil className="h-3 w-3" />
+          Edit
+        </Link>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Plus, FileText, Settings, List } from "lucide-react";
+import { LayoutDashboard, Plus, FileText, PieChart, List } from "lucide-react";
 import { cn } from "@/backend/lib/utils";
 
 const navItems = [
@@ -10,7 +10,7 @@ const navItems = [
   { href: "/expenses", icon: List, label: "Expenses" },
   { href: "/add", icon: Plus, label: "Add", primary: true },
   { href: "/invoices", icon: FileText, label: "Invoices" },
-  { href: "/settings", icon: Settings, label: "Settings" },
+  { href: "/analytics", icon: PieChart, label: "Analytics" },
 ];
 
 export function BottomNav({ className }: { className?: string }) {

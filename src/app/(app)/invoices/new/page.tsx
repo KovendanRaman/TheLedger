@@ -10,7 +10,7 @@ import { IS_MOCK_MODE, MOCK_TRANSACTIONS, MOCK_PARENTAL_LINKS } from "@/backend/
 import type { Transaction, ParentalLink } from "@/backend/lib/types/database.types";
 import { BottomNav } from "@/frontend/components/bottom-nav";
 import { PageTransition } from "@/frontend/components/page-transition";
-import { Button } from "@/frontend/components/ui/button";
+import { CategoryBadge } from "@/frontend/components/category-badge";
 import {
   ArrowLeft,
   Check,
@@ -20,6 +20,7 @@ import {
   Loader2,
   Link2,
   ExternalLink,
+  Receipt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -105,19 +106,20 @@ export default function NewInvoicePage() {
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
-  // ── Loading state ──────────────────────────────────────────
+  // ── Loading state ────────────────────────────────────────────
   if (loading) {
     return (
-      <PageTransition className="min-h-screen bg-[#F4F5FB] pb-32">
-        <div className="px-5 pt-14 pb-6">
+      <PageTransition className="min-h-screen bg-[#F4F5FB]">
+        <div className="px-5 pt-10 pb-6">
+          <div className="h-4 w-24 bg-gray-200 rounded-lg animate-pulse mb-5" />
           <div className="h-7 w-48 bg-gray-200 rounded-lg animate-pulse" />
-          <div className="h-4 w-72 bg-gray-200 rounded-lg animate-pulse mt-2" />
+          <div className="h-4 w-64 bg-gray-200 rounded-lg animate-pulse mt-2" />
         </div>
         <div className="px-5 space-y-3">
-          {[...Array(4)].map((_, i) => (
+          {[...Array(5)].map((_, i) => (
             <div key={i} className="bg-white rounded-2xl p-4 border border-border/40 animate-pulse">
               <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-md bg-gray-200" />
+                <div className="w-6 h-6 rounded-md bg-gray-200 flex-shrink-0" />
                 <div className="flex-1 space-y-1.5">
                   <div className="h-4 w-3/4 bg-gray-200 rounded-lg" />
                   <div className="h-3 w-1/2 bg-gray-100 rounded-lg" />
@@ -132,13 +134,16 @@ export default function NewInvoicePage() {
     );
   }
 
-  // ── Success state ──────────────────────────────────────────
+  // ── Success state ────────────────────────────────────────────
   if (step === "success") {
     return (
-      <PageTransition className="min-h-screen bg-[#F4F5FB] pb-32">
-        <div className="px-5 pt-14 pb-6">
-          <Link href="/invoices" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors mb-6">
-            <ArrowLeft className="w-4 h-4" /> Back to Invoices
+      <PageTransition className="min-h-screen bg-[#F4F5FB] pb-28 lg:pb-12">
+        <div className="px-5 pt-10 pb-6">
+          <Link
+            href="/invoices"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Statements
           </Link>
         </div>
 
@@ -231,29 +236,35 @@ export default function NewInvoicePage() {
     );
   }
 
-  // ── Select transactions state ──────────────────────────────
+  // ── Select transactions state ────────────────────────────────
+  // Full-height flex column: header + scrollable list + action bar.
+  // No fixed positioning — the bar is part of the natural layout flow.
   return (
-    <PageTransition className="min-h-screen bg-[#F4F5FB] pb-40">
-      <div className="px-5 pt-14 pb-6">
-        <Link href="/invoices" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors mb-4">
+    <PageTransition className="h-screen flex flex-col bg-[#F4F5FB] overflow-hidden">
+
+      {/* Header */}
+      <div className="px-5 pt-10 pb-4 flex-shrink-0">
+        <Link
+          href="/invoices"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors mb-4"
+        >
           <ArrowLeft className="w-4 h-4" /> Back
         </Link>
-        <h1 className="text-[28px] font-bold text-foreground tracking-tight">
-          New Statement
-        </h1>
-        <p className="text-sm font-medium text-muted-foreground mt-1">
-          Select the transactions to include in this invoice.
+        <h1 className="text-[26px] font-bold text-foreground tracking-tight">New Statement</h1>
+        <p className="text-sm font-medium text-muted-foreground mt-0.5">
+          Select the transactions to include.
         </p>
       </div>
 
       {txns.length === 0 ? (
-        <div className="px-5">
-          <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-[1.5rem] border border-border/50 shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
-              <FileText className="h-8 w-8 text-muted-foreground" />
+        /* Empty state — centred in remaining space */
+        <div className="flex-1 flex items-center justify-center px-5">
+          <div className="flex flex-col items-center text-center bg-white rounded-[1.5rem] border border-border/50 shadow-sm p-10 w-full max-w-sm">
+            <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mb-4">
+              <FileText className="h-7 w-7 text-muted-foreground" />
             </div>
             <p className="text-foreground font-semibold">No pending billable transactions</p>
-            <p className="text-muted-foreground text-[13px] mt-1 px-4 max-w-xs">
+            <p className="text-muted-foreground text-[13px] mt-1 max-w-[220px]">
               Add transactions and mark them as &quot;billable&quot; to include them in a statement.
             </p>
             <Link
@@ -267,26 +278,31 @@ export default function NewInvoicePage() {
         </div>
       ) : (
         <>
-          {/* Select all bar */}
-          <div className="px-5 mb-3">
+          {/* Select-all row */}
+          <div className="px-5 pb-2 flex-shrink-0 flex items-center justify-between">
             <button
               onClick={selectAll}
               className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
             >
-              <div className={cn(
-                "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
-                selected.size === txns.length
-                  ? "bg-primary border-primary"
-                  : "border-gray-300"
-              )}>
+              <div
+                className={cn(
+                  "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
+                  selected.size === txns.length
+                    ? "bg-primary border-primary"
+                    : "border-gray-300"
+                )}
+              >
                 {selected.size === txns.length && <Check className="w-3.5 h-3.5 text-white" />}
               </div>
               {selected.size === txns.length ? "Deselect all" : "Select all"} ({txns.length})
             </button>
+            <span className="text-xs text-muted-foreground font-medium">
+              {selected.size} selected
+            </span>
           </div>
 
-          {/* Transaction list */}
-          <div className="px-5 space-y-2">
+          {/* Scrollable transaction list */}
+          <div className="flex-1 overflow-y-auto px-5 space-y-2 pb-3">
             {txns.map((txn) => {
               const isSelected = selected.has(txn.id);
               return (
@@ -296,14 +312,16 @@ export default function NewInvoicePage() {
                   className={cn(
                     "w-full flex items-center gap-3 bg-white rounded-2xl p-4 border transition-all text-left",
                     isSelected
-                      ? "border-primary/40 shadow-[0_0_0_1px_rgba(99,102,241,0.2)] bg-primary/[0.02]"
-                      : "border-border/40 hover:border-border"
+                      ? "border-primary/40 shadow-[0_0_0_1px_rgba(99,102,241,0.15)] bg-primary/[0.02]"
+                      : "border-border/40 hover:border-border/70"
                   )}
                 >
-                  <div className={cn(
-                    "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all shrink-0",
-                    isSelected ? "bg-primary border-primary" : "border-gray-300"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all shrink-0",
+                      isSelected ? "bg-primary border-primary" : "border-gray-300"
+                    )}
+                  >
                     {isSelected && <Check className="w-4 h-4 text-white" />}
                   </div>
 
@@ -311,14 +329,17 @@ export default function NewInvoicePage() {
                     <p className="text-[14px] font-bold text-foreground truncate">
                       {txn.description}
                     </p>
-                    <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       <span className="text-xs text-muted-foreground">{formatDate(txn.date)}</span>
                       {txn.categories && (
                         <>
                           <span className="text-xs text-muted-foreground">·</span>
-                          <span className="text-xs font-medium" style={{ color: txn.categories.color }}>
-                            {txn.categories.name}
-                          </span>
+                          <CategoryBadge
+                            name={txn.categories.name}
+                            color={txn.categories.color ?? undefined}
+                            size="sm"
+                            className="shadow-none"
+                          />
                         </>
                       )}
                     </div>
@@ -334,29 +355,46 @@ export default function NewInvoicePage() {
         </>
       )}
 
-      {/* Sticky bottom bar */}
+      {/* Action bar — naturally at the bottom of the flex column, no fixed needed */}
       {txns.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-border/40 p-4 pb-safe z-40 lg:ml-64">
-          <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs text-muted-foreground font-medium">
-                {selected.size} of {txns.length} selected
-              </p>
-              <p className="text-xl font-bold tracking-tight">
-                {formatCurrency(selectedTotal)}
-              </p>
+        <div className="flex-shrink-0 bg-white/90 backdrop-blur-md border-t border-border/30 px-5 py-4 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] lg:mb-0 mb-16">
+          <div className="flex items-center justify-between gap-4">
+            {/* Summary */}
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: "rgba(99,102,241,0.1)" }}
+              >
+                <Receipt className="w-5 h-5" style={{ color: "#6366f1" }} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium leading-tight">
+                  {selected.size} of {txns.length} selected
+                </p>
+                <p className="text-[18px] font-bold tracking-tight leading-tight">
+                  {formatCurrency(selectedTotal)}
+                </p>
+              </div>
             </div>
-            <Button
+
+            {/* CTA */}
+            <button
               onClick={handleGenerate}
               disabled={selected.size === 0 || isPending}
-              className="h-12 px-8 rounded-xl font-bold text-base gradient-primary shadow-lg shadow-primary/25"
+              className={cn(
+                "h-11 px-7 rounded-xl font-bold text-[15px] text-white transition-all",
+                selected.size === 0
+                  ? "opacity-40 cursor-not-allowed"
+                  : "hover:opacity-90 shadow-[0_6px_20px_rgba(99,102,241,0.35)]"
+              )}
+              style={{ backgroundColor: "#6366f1" }}
             >
               {isPending ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 `Create Statement (${selected.size})`
               )}
-            </Button>
+            </button>
           </div>
         </div>
       )}

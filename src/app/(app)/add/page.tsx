@@ -147,7 +147,10 @@ export default function AddTransactionPage() {
         </div>
 
         {/* Invoicable Toggle */}
-        <div className="flex items-center justify-between p-4 mt-2 rounded-[1.25rem] border border-border/50 bg-white shadow-sm">
+        <label
+          htmlFor="is_invoicable"
+          className="flex items-center justify-between p-4 mt-2 rounded-[1.25rem] border border-border/50 bg-white shadow-sm cursor-pointer select-none"
+        >
           <div className="flex items-center gap-4">
             <div className="p-2.5 rounded-xl bg-primary/10">
               <Receipt className="h-5 w-5 text-primary" />
@@ -166,7 +169,7 @@ export default function AddTransactionPage() {
             checked={isInvoicable}
             onCheckedChange={setIsInvoicable}
           />
-        </div>
+        </label>
 
         {isInvoicable && (
           <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20 text-[13px] text-primary font-medium">

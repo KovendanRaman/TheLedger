@@ -7,23 +7,31 @@ import { format, subDays, parseISO } from "date-fns";
 
 export function MoneyFlowChart({ transactions }: { transactions: Transaction[] }) {
   const data = useMemo(() => {
-    // Generate the last 7 days
+    // Find the most recent transaction date; fall back to today if no transactions
+    const mostRecentDate =
+      transactions.length > 0
+        ? transactions.reduce((latest, t) => {
+            const d = (t.date || t.created_at).split("T")[0];
+            return d > latest ? d : latest;
+          }, "0000-00-00")
+        : format(new Date(), "yyyy-MM-dd");
+
+    const anchor = parseISO(mostRecentDate);
+
+    // Generate 7 days ending on the most recent transaction date
     const days = Array.from({ length: 7 }).map((_, i) => {
-      const d = subDays(new Date(2026, 2, 12), 6 - i); // Mocking specifically around mid-March 2026 to match mock data
+      const d = subDays(anchor, 6 - i);
       return {
         dateStr: format(d, "yyyy-MM-dd"),
-        displayLabel: format(d, "MMM dd"), // e.g., "Apr 10"
+        displayLabel: format(d, "MMM d"),
         personal: 0,
         invoicable: 0,
       };
     });
 
-    // Bucket recent transactions
     transactions.forEach((t) => {
-      // Basic date matching (ignoring exact time zones for mock perfection)
       const txnDateStr = (t.date || t.created_at).split("T")[0];
       const dayBucket = days.find((d) => d.dateStr === txnDateStr);
-      
       if (dayBucket) {
         if (t.is_invoicable) {
           dayBucket.invoicable += t.amount;
