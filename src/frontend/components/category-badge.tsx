@@ -81,7 +81,7 @@ export const CategoryBadge = memo(function CategoryBadge({
         className={cn(
           "flex items-center justify-center rounded-full shadow-sm flex-shrink-0",
           isSmall ? "w-5 h-5 mr-2" : "w-7 h-7 mr-2.5",
-          isSoft ? "bg-white/70" : "bg-white"
+          isSoft ? "bg-white/70 dark:bg-white/20" : "bg-white dark:bg-white/90"
         )}
       >
         <Icon className={cn(isSmall ? "w-3 h-3" : "w-3.5 h-3.5")} style={{ color }} />

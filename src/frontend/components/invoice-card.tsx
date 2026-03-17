@@ -86,7 +86,7 @@ export const InvoiceCard = memo(function InvoiceCard({
         href={`/invoices/${invoice.id}/pdf`}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-3 w-full py-2 rounded-xl border border-border bg-muted/30 text-sm font-semibold text-muted-foreground hover:bg-muted/60 transition-colors flex items-center justify-center gap-2"
+        className="mt-3 w-full py-2 rounded-xl border border-border dark:border-white/10 bg-muted/30 dark:bg-white/10 text-sm font-semibold text-muted-foreground hover:bg-muted/60 dark:hover:bg-white/15 transition-colors flex items-center justify-center gap-2"
       >
         <Download className="h-4 w-4" />
         Save as PDF
@@ -106,9 +106,9 @@ export const InvoiceCard = memo(function InvoiceCard({
 
           {onRevoke && (
             confirmingRevoke ? (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
                 <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
-                <p className="text-xs font-medium text-red-700 flex-1">
+                <p className="text-xs font-medium text-red-700 dark:text-red-400 flex-1">
                   This will delete the statement and return all transactions to pending.
                 </p>
                 <div className="flex gap-2 flex-shrink-0">
@@ -129,7 +129,7 @@ export const InvoiceCard = memo(function InvoiceCard({
             ) : (
               <button
                 onClick={handleRevokeClick}
-                className="w-full py-2 rounded-xl border border-red-200 bg-red-50 text-red-600 text-sm font-semibold hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-2 rounded-xl border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-semibold hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
               >
                 <Undo2 className="h-4 w-4" />
                 Revoke Statement

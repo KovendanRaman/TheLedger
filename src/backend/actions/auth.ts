@@ -51,3 +51,18 @@ export async function updateSharingEnabled(
     return { error: "Could not update sharing settings." };
   }
 }
+
+export async function updateTheme(
+  userId: string,
+  theme: "light" | "dark"
+): Promise<{ error: string | null }> {
+  try {
+    await db
+      .update(users)
+      .set({ theme })
+      .where(eq(users.id, userId));
+    return { error: null };
+  } catch {
+    return { error: "Could not update theme preference." };
+  }
+}

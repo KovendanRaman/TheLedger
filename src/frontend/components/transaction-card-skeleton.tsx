@@ -16,7 +16,7 @@ function Shimmer({ className }: { className?: string }) {
 
 export function TransactionCardSkeleton() {
   return (
-    <div className="flex items-center gap-4 p-4 rounded-[1.25rem] bg-white border border-border/40 shadow-sm">
+    <div className="flex items-center gap-4 p-4 rounded-[1.25rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
       {/* Category icon placeholder */}
       <Shimmer className="flex-shrink-0 w-12 h-12 rounded-[1rem]" />
 

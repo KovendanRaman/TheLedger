@@ -14,7 +14,7 @@ export const TransactionCard = memo(function TransactionCard({ transaction }: Tr
   const category = transaction.categories;
 
   return (
-    <div className="flex items-center gap-4 p-4 rounded-[1.25rem] bg-white border border-border/40 shadow-sm hover:shadow-md transition-all group">
+    <div className="flex items-center gap-4 p-4 rounded-[1.25rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm hover:shadow-md transition-all group">
       {/* Category icon */}
       <div
         className="flex-shrink-0 w-12 h-12 rounded-[1rem] flex items-center justify-center"
@@ -61,7 +61,7 @@ export const TransactionCard = memo(function TransactionCard({ transaction }: Tr
         </span>
         <Link
           href={`/expenses/${transaction.id}/edit`}
-          className="mt-0.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border border-border/60 text-muted-foreground bg-white shadow-sm hover:border-primary hover:text-primary hover:shadow-primary/20 hover:shadow-md transition-all"
+          className="mt-0.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border border-border/60 dark:border-white/10 text-muted-foreground bg-white dark:bg-[#1a1a2e] shadow-sm hover:border-primary hover:text-primary hover:shadow-primary/20 hover:shadow-md transition-all"
           title="Edit transaction"
         >
           <Pencil className="h-3 w-3" />

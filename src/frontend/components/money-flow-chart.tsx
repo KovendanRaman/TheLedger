@@ -48,7 +48,7 @@ export function MoneyFlowChart({ transactions }: { transactions: Transaction[] }
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white px-4 py-3 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-border/40">
+        <div className="bg-white dark:bg-[#1a1a2e] px-4 py-3 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-border/40 dark:border-white/10">
           <p className="text-sm font-semibold text-muted-foreground mb-2">{label}</p>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center gap-3 mb-1 last:mb-0">

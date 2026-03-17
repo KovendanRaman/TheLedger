@@ -20,9 +20,11 @@ import {
 import {
   Share2, Copy, ExternalLink, Loader2, Shield, LogOut,
   BookOpen, Plus, Trash2, Check, Pencil, X, Link2,
+  Sun, Moon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/backend/lib/utils";
+import { useTheme } from "@/frontend/components/theme-provider";
 
 // ─── Link Card ────────────────────────────────────────────────
 function ParentalLinkCard({
@@ -89,9 +91,9 @@ function ParentalLinkCard({
   }
 
   return (
-    <div className="rounded-[1.25rem] border border-border/50 bg-secondary/20 overflow-hidden">
+    <div className="rounded-[1.25rem] border border-border/50 dark:border-white/10 bg-secondary/20 dark:bg-white/5 overflow-hidden">
       {/* Card header: label + actions */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 bg-white">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 dark:border-white/10 bg-white dark:bg-[#1a1a2e]">
         {editing ? (
           <>
             <input
@@ -170,8 +172,8 @@ function ParentalLinkCard({
             className={cn(
               "flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[13px] font-semibold border transition-all",
               sharingEnabled
-                ? "bg-white border-border/60 hover:bg-secondary/40 text-foreground shadow-sm"
-                : "bg-muted/30 border-border/30 text-muted-foreground cursor-not-allowed"
+                ? "bg-white dark:bg-[#1a1a2e] border-border/60 dark:border-white/10 hover:bg-secondary/40 dark:hover:bg-white/10 text-foreground shadow-sm"
+                : "bg-muted/30 dark:bg-white/10 border-border/30 text-muted-foreground cursor-not-allowed"
             )}
           >
             <Copy className="h-3.5 w-3.5" />
@@ -183,8 +185,8 @@ function ParentalLinkCard({
             className={cn(
               "flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[13px] font-semibold border transition-all",
               sharingEnabled
-                ? "bg-white border-border/60 hover:bg-secondary/40 text-primary shadow-sm"
-                : "bg-muted/30 border-border/30 text-muted-foreground cursor-not-allowed"
+                ? "bg-white dark:bg-[#1a1a2e] border-border/60 dark:border-white/10 hover:bg-secondary/40 dark:hover:bg-white/10 text-primary shadow-sm"
+                : "bg-muted/30 dark:bg-white/10 border-border/30 text-muted-foreground cursor-not-allowed"
             )}
           >
             <ExternalLink className="h-3.5 w-3.5" />
@@ -242,7 +244,7 @@ function AddLinkForm({
         onKeyDown={(e) => e.key === "Enter" && handleCreate()}
         maxLength={40}
         placeholder="Label, e.g. Mom, Dad, Guardian…"
-        className="w-full h-11 px-4 rounded-xl bg-white border border-border/60 text-[14px] font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
+        className="w-full h-11 px-4 rounded-xl bg-white dark:bg-[#1a1a2e] border border-border/60 dark:border-white/10 text-[14px] font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
       />
       <div className="flex gap-2">
         <button
@@ -255,7 +257,7 @@ function AddLinkForm({
         </button>
         <button
           onClick={onCancel}
-          className="px-4 h-10 rounded-xl bg-white border border-border/60 text-[13px] font-semibold text-muted-foreground hover:bg-muted/40 transition-all"
+          className="px-4 h-10 rounded-xl bg-white dark:bg-[#1a1a2e] border border-border/60 dark:border-white/10 text-[13px] font-semibold text-muted-foreground hover:bg-muted/40 transition-all"
         >
           Cancel
         </button>
@@ -267,6 +269,7 @@ function AddLinkForm({
 // ─── Main Page ────────────────────────────────────────────────
 export default function SettingsPage() {
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [links, setLinks] = useState<ParentalLink[]>([]);
   const [loading, setLoading] = useState(true);
@@ -277,7 +280,7 @@ export default function SettingsPage() {
     async function load() {
       setLoading(true);
       if (IS_MOCK_MODE) {
-        setProfile({ id: MOCK_PROFILE.id, email: MOCK_PROFILE.email, full_name: MOCK_PROFILE.full_name, is_sharing_enabled: MOCK_PROFILE.is_sharing_enabled });
+        setProfile({ id: MOCK_PROFILE.id, email: MOCK_PROFILE.email, full_name: MOCK_PROFILE.full_name, is_sharing_enabled: MOCK_PROFILE.is_sharing_enabled, theme: MOCK_PROFILE.theme });
         setLinks(MOCK_PARENTAL_LINKS);
         setLoading(false);
         return;
@@ -326,7 +329,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="px-5 pt-14 pb-6">
         <div className="flex items-center gap-4 mb-2">
-          <div className="p-3 rounded-2xl bg-white shadow-sm border border-border/50">
+          <div className="p-3 rounded-2xl bg-white dark:bg-[#1a1a2e] shadow-sm border border-border/50 dark:border-white/10">
             <BookOpen className="h-6 w-6 text-primary" />
           </div>
           <h1 className="text-[28px] font-bold text-foreground">Settings</h1>
@@ -340,7 +343,7 @@ export default function SettingsPage() {
 
       <div className="px-5 space-y-6">
         {/* ── Parental Sharing Card ── */}
-        <div className="rounded-[1.5rem] bg-white border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5 space-y-5">
+        <div className="rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5 space-y-5">
           {/* Section header */}
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-primary/10">
@@ -423,7 +426,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Privacy Note */}
-        <div className="flex items-start gap-3 p-5 rounded-[1.25rem] bg-indigo-50 border border-indigo-100/50 shadow-sm">
+        <div className="flex items-start gap-3 p-5 rounded-[1.25rem] bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100/50 dark:border-indigo-500/20 shadow-sm">
           <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
           <p className="text-[13px] text-muted-foreground leading-relaxed">
             Parents can only see transactions marked as{" "}
@@ -432,10 +435,55 @@ export default function SettingsPage() {
           </p>
         </div>
 
+        {/* Theme Toggle */}
+        <div className="rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-3 rounded-2xl bg-primary/10">
+              {theme === "dark" ? (
+                <Moon className="h-6 w-6 text-primary" />
+              ) : (
+                <Sun className="h-6 w-6 text-primary" />
+              )}
+            </div>
+            <div>
+              <p className="text-[15px] font-bold text-foreground">Appearance</p>
+              <p className="text-[13px] font-medium text-muted-foreground mt-0.5">
+                {theme === "dark" ? "Dark mode is active" : "Light mode is active"}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => theme === "dark" && toggleTheme()}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold border transition-all",
+                theme === "light"
+                  ? "bg-primary text-white border-primary shadow-md shadow-primary/20"
+                  : "bg-white dark:bg-white/5 border-border/60 dark:border-white/10 text-muted-foreground hover:border-primary/40 hover:text-primary"
+              )}
+            >
+              <Sun className="h-4 w-4" />
+              Light
+            </button>
+            <button
+              onClick={() => theme === "light" && toggleTheme()}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold border transition-all",
+                theme === "dark"
+                  ? "bg-primary text-white border-primary shadow-md shadow-primary/20"
+                  : "bg-white dark:bg-white/5 border-border/60 dark:border-white/10 text-muted-foreground hover:border-primary/40 hover:text-primary"
+              )}
+            >
+              <Moon className="h-4 w-4" />
+              Dark
+            </button>
+          </div>
+        </div>
+
         {/* Sign Out */}
         <button
           onClick={handleSignOut}
-          className="w-full h-14 rounded-full text-destructive border border-destructive/20 hover:bg-destructive hover:text-white transition-colors font-semibold tracking-wide flex items-center justify-center gap-2 bg-white shadow-sm"
+          className="w-full h-14 rounded-full text-destructive border border-destructive/20 hover:bg-destructive hover:text-white transition-colors font-semibold tracking-wide flex items-center justify-center gap-2 bg-white dark:bg-[#1a1a2e] shadow-sm"
         >
           <LogOut className="h-5 w-5" />
           Sign Out

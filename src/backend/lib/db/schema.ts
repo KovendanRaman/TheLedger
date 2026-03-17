@@ -25,6 +25,7 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   fullName: text("full_name"),
   isSharingEnabled: boolean("is_sharing_enabled").notNull().default(true),
+  theme: text("theme").notNull().default("light"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

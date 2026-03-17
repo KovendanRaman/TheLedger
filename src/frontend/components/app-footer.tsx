@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function AppFooter() {
   return (
-    <footer className="w-full border-t border-border/30 bg-white/60 backdrop-blur-sm py-5 px-6">
+    <footer className="w-full border-t border-border/30 dark:border-white/10 bg-white/60 dark:bg-[#1a1a2e]/60 backdrop-blur-sm py-5 px-6 transition-colors duration-300">
       <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4">
         {/* Creator credit */}
         <p className="text-[15px] text-muted-foreground font-medium">

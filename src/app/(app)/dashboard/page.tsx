@@ -47,7 +47,7 @@ export default async function DashboardPage() {
   const firstName = fullName?.split(" ")[0] ?? "Student";
 
   return (
-    <PageTransition className="min-h-screen bg-[#F4F5FB] pb-32 md:pb-12 text-foreground">
+    <PageTransition className="min-h-screen bg-[#F4F5FB] dark:bg-[#0f0f14] pb-32 md:pb-12 text-foreground transition-colors duration-300">
       
       {/* Top Navigation Bar */}
       <div className="flex flex-row items-center justify-between gap-3 px-4 sm:px-6 md:px-10 pt-10 pb-5">
@@ -59,7 +59,7 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-3 self-end md:self-auto">
           <Link
             href="/settings"
-            className="flex items-center gap-3 bg-white pl-2 pr-4 py-1.5 rounded-full border border-border/40 shadow-sm hover:border-primary/40 hover:shadow-md transition-all"
+            className="flex items-center gap-3 bg-white dark:bg-[#1a1a2e] pl-2 pr-4 py-1.5 rounded-full border border-border/40 dark:border-white/10 shadow-sm hover:border-primary/40 hover:shadow-md transition-all"
           >
             <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: 'rgba(99,102,241,0.12)', color: '#6366f1' }}>
               {firstName[0]}
@@ -76,7 +76,7 @@ export default async function DashboardPage() {
 
         {/* Controls Toolbar */}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 bg-white px-4 py-2.5 border border-border/40 rounded-full shadow-sm text-sm font-semibold">
+          <div className="flex items-center gap-2 bg-white dark:bg-[#1a1a2e] px-4 py-2.5 border border-border/40 dark:border-white/10 rounded-full shadow-sm text-sm font-semibold">
             <Calendar className="w-4 h-4 text-muted-foreground" />
             <span>This month</span>
           </div>
@@ -89,8 +89,8 @@ export default async function DashboardPage() {
         {/* 3 Summary Cards Row */}
         <div className="grid grid-cols-3 gap-3 sm:gap-5">
           {/* Card 1: Total Spend */}
-          <div className="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 shadow-sm relative group">
-            <Link href="/analytics" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 transition-colors">
+          <div className="bg-white dark:bg-[#1a1a2e] p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 dark:border-white/10 shadow-sm relative group">
+            <Link href="/analytics" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 dark:group-hover:bg-white/10 transition-colors">
               <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
             <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Spent</h3>
@@ -103,8 +103,8 @@ export default async function DashboardPage() {
           </div>
 
           {/* Card 2: Billable */}
-          <div className="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 shadow-sm relative group">
-            <Link href="/invoices" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 transition-colors">
+          <div className="bg-white dark:bg-[#1a1a2e] p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 dark:border-white/10 shadow-sm relative group">
+            <Link href="/invoices" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 dark:group-hover:bg-white/10 transition-colors">
               <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
             <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Billable</h3>
@@ -115,8 +115,8 @@ export default async function DashboardPage() {
           </div>
 
           {/* Card 3: Paid out */}
-          <div className="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 shadow-sm relative group">
-            <Link href="/expenses" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 transition-colors">
+          <div className="bg-white dark:bg-[#1a1a2e] p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 dark:border-white/10 shadow-sm relative group">
+            <Link href="/expenses" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 dark:group-hover:bg-white/10 transition-colors">
               <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
             <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Paid</h3>
@@ -134,15 +134,15 @@ export default async function DashboardPage() {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Money Flow Chart Block */}
-            <div className="bg-white p-6 rounded-[2rem] border border-border/40 shadow-sm">
+            <div className="bg-white dark:bg-[#1a1a2e] p-6 rounded-[2rem] border border-border/40 dark:border-white/10 shadow-sm">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <h2 className="text-lg font-bold">Spending flow</h2>
                 <div className="flex gap-2">
-                  <select className="px-4 py-2 bg-muted/30 border-none rounded-full text-sm font-semibold text-foreground focus:ring-0 cursor-pointer">
+                  <select className="px-4 py-2 bg-muted/30 dark:bg-white/10 border-none rounded-full text-sm font-semibold text-foreground focus:ring-0 cursor-pointer">
                     <option>All accounts</option>
                     <option>Cash</option>
                   </select>
-                  <select className="px-4 py-2 bg-muted/30 border-none rounded-full text-sm font-semibold text-foreground focus:ring-0 cursor-pointer">
+                  <select className="px-4 py-2 bg-muted/30 dark:bg-white/10 border-none rounded-full text-sm font-semibold text-foreground focus:ring-0 cursor-pointer">
                     <option>This month</option>
                   </select>
                 </div>
@@ -151,10 +151,10 @@ export default async function DashboardPage() {
             </div>
 
             {/* Recent Transactions */}
-            <div className="bg-white px-4 sm:px-6 py-5 rounded-[2rem] border border-border/40 shadow-sm">
+            <div className="bg-white dark:bg-[#1a1a2e] px-4 sm:px-6 py-5 rounded-[2rem] border border-border/40 dark:border-white/10 shadow-sm">
               <div className="flex justify-between items-center mb-5">
                 <h2 className="text-lg font-bold">Recent transactions</h2>
-                <Link href="/expenses" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 rounded-full text-sm font-semibold hover:bg-muted/50 transition-colors">
+                <Link href="/expenses" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 dark:bg-white/10 rounded-full text-sm font-semibold hover:bg-muted/50 dark:hover:bg-white/10 transition-colors">
                   See all <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
@@ -165,7 +165,7 @@ export default async function DashboardPage() {
                   const category = txn.categories || MOCK_CATEGORIES.find(c => c.id === txn.category_id);
                   const dateLabel = format(parseISO((txn.date || txn.created_at).split("T")[0]), "dd MMM");
                   return (
-                    <div key={txn.id} className="flex items-center gap-3 py-3 border-b border-border/20 last:border-0">
+                    <div key={txn.id} className="flex items-center gap-3 py-3 border-b border-border/20 dark:border-white/5 last:border-0">
                       <div
                         className="w-10 h-10 rounded-[0.75rem] flex items-center justify-center flex-shrink-0"
                         style={{ backgroundColor: category?.color ? `${category.color}18` : "#6366f118" }}
@@ -191,7 +191,7 @@ export default async function DashboardPage() {
               <div className="hidden md:block">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-border/40 text-[11px] font-bold text-muted-foreground uppercase tracking-wider text-left">
+                    <tr className="border-b border-border/40 dark:border-white/10 text-[11px] font-bold text-muted-foreground uppercase tracking-wider text-left">
                       <th className="pb-3 px-2">Date</th>
                       <th className="pb-3 px-2">Amount</th>
                       <th className="pb-3 px-2">Description</th>
@@ -204,7 +204,7 @@ export default async function DashboardPage() {
                       const category = txn.categories || MOCK_CATEGORIES.find(c => c.id === txn.category_id);
                       const dateLabel = format(parseISO((txn.date || txn.created_at).split("T")[0]), "dd MMM yyyy");
                       return (
-                        <tr key={txn.id} className="border-b border-border/30 last:border-0 hover:bg-muted/10 transition-colors">
+                        <tr key={txn.id} className="border-b border-border/30 dark:border-white/10 last:border-0 hover:bg-muted/10 dark:hover:bg-white/5 transition-colors">
                           <td className="py-3.5 px-2 text-[13px] font-semibold text-muted-foreground whitespace-nowrap">{dateLabel}</td>
                           <td className="py-3.5 px-2 text-[14px] font-bold whitespace-nowrap">R {txn.amount.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</td>
                           <td className="py-3.5 px-2">
@@ -217,7 +217,7 @@ export default async function DashboardPage() {
                           </td>
                           <td className="py-3.5 px-2">
                             {txn.is_invoicable ? (
-                              <span className={`text-[11px] font-bold px-2 py-1 rounded-md capitalize ${txn.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-primary/10 text-primary'}`}>{txn.status}</span>
+                              <span className={`text-[11px] font-bold px-2 py-1 rounded-md capitalize ${txn.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-primary/10 text-primary'}`}>{txn.status}</span>
                             ) : (
                               <span className="text-[11px] font-bold px-2 py-1 rounded-md bg-muted text-muted-foreground">Personal</span>
                             )}
@@ -243,8 +243,8 @@ export default async function DashboardPage() {
           <div className="space-y-6">
 
             {/* Spending by Category */}
-            <div className="bg-white p-6 rounded-[2rem] border border-border/40 shadow-sm relative group">
-              <Link href="/analytics" className="absolute top-5 right-5 w-8 h-8 rounded-full border border-border/60 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 transition-colors">
+            <div className="bg-white dark:bg-[#1a1a2e] p-6 rounded-[2rem] border border-border/40 dark:border-white/10 shadow-sm relative group">
+              <Link href="/analytics" className="absolute top-5 right-5 w-8 h-8 rounded-full border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 dark:group-hover:bg-white/10 transition-colors">
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
               <h2 className="text-lg font-bold mb-6">Spending by category</h2>

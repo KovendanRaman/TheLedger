@@ -248,6 +248,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
       email: users.email,
       fullName: users.fullName,
       isSharingEnabled: users.isSharingEnabled,
+      theme: users.theme,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -261,6 +262,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
     email: u.email,
     full_name: u.fullName,
     is_sharing_enabled: u.isSharingEnabled,
+    theme: (u.theme === "dark" ? "dark" : "light") as "light" | "dark",
   };
 }
 
@@ -378,6 +380,7 @@ export async function getInvoiceWithTransactions(invoiceId: string): Promise<{
           email: profileRows[0].email,
           full_name: profileRows[0].fullName,
           is_sharing_enabled: profileRows[0].isSharingEnabled,
+          theme: "light" as const,
         }
       : null,
   };
