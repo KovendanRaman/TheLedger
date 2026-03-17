@@ -7,6 +7,7 @@ import { TransactionListSkeleton } from "@/frontend/components/transaction-card-
 import { PageTransition } from "@/frontend/components/page-transition";
 import { IS_MOCK_MODE, MOCK_TRANSACTIONS, MOCK_CATEGORIES } from "@/backend/lib/mock-data";
 import { getUserTransactions, getCategories } from "@/backend/actions/data";
+import { deleteTransaction } from "@/backend/actions/transactions";
 import type { Transaction, TransactionStatus } from "@/backend/lib/types/database.types";
 import {
   ChevronLeft,
@@ -140,6 +141,16 @@ export default function ExpensesPage() {
 
   const totalFiltered = sorted.reduce((s, t) => s + t.amount, 0);
   const hasActiveFilters = activeStatus !== "all" || activeCategoryId !== "all" || search.trim() !== "";
+
+  const handleDelete = useCallback(async (id: string) => {
+    setAllTxns((prev) => prev.filter((t) => t.id !== id));
+    try {
+      await deleteTransaction(id);
+    } catch {
+      const [txns] = await Promise.all([getUserTransactions()]);
+      setAllTxns(txns);
+    }
+  }, []);
 
   // Infinite scroll via IntersectionObserver
   const handleLoadMore = useCallback(() => {
@@ -370,7 +381,7 @@ export default function ExpensesPage() {
           <>
             <div className="space-y-3">
               {visibleTxns.map((txn) => (
-                <TransactionCard key={txn.id} transaction={txn} />
+                <TransactionCard key={txn.id} transaction={txn} onDelete={handleDelete} />
               ))}
             </div>
 

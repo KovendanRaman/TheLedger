@@ -14,6 +14,7 @@ import {
 import type { Transaction } from "@/backend/lib/types/database.types";
 import { Calendar, Plus, ArrowUpRight, Wallet, ArrowRight } from "lucide-react";
 import { CategoryBadge } from "@/frontend/components/category-badge";
+import { AnimatedCounter } from "@/frontend/components/animated-counter";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
 
@@ -95,7 +96,11 @@ export default async function DashboardPage() {
             </Link>
             <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Spent</h3>
             <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-4 leading-none">
-              <span className="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5">R</span>{totalSpend.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+              <AnimatedCounter
+                value={totalSpend}
+                prefix="R"
+                prefixClassName="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5"
+              />
             </p>
             <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">
               {txns.length} transaction{txns.length !== 1 ? "s" : ""}
@@ -109,7 +114,12 @@ export default async function DashboardPage() {
             </Link>
             <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Billable</h3>
             <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-4 leading-none">
-              <span className="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5">R</span>{invoicableTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+              <AnimatedCounter
+                value={invoicableTotal}
+                prefix="R"
+                duration={1.4}
+                prefixClassName="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5"
+              />
             </p>
             <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">Pending invoice</p>
           </div>
@@ -121,7 +131,12 @@ export default async function DashboardPage() {
             </Link>
             <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Paid</h3>
             <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-4 leading-none">
-              <span className="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5">R</span>{paidTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+              <AnimatedCounter
+                value={paidTotal}
+                prefix="R"
+                duration={1.6}
+                prefixClassName="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5"
+              />
             </p>
             <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">{pendingCount} still pending</p>
           </div>
