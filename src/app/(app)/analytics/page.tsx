@@ -37,7 +37,7 @@ function getCategoryById(categories: Category[], id: string | null) {
 function BarTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white px-4 py-3 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.1)] border border-border/40">
+    <div className="bg-white dark:bg-[#1a1a2e] px-4 py-3 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.1)] border border-border/40 dark:border-white/10">
       <p className="text-[12px] font-bold text-muted-foreground mb-2">{label}</p>
       {payload.map((entry: any, i: number) => (
         <div key={i} className="flex items-center gap-3 mb-1 last:mb-0">
@@ -54,7 +54,7 @@ function PieTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const { name, value, color } = payload[0].payload;
   return (
-    <div className="bg-white px-3 py-2 rounded-xl shadow-lg border border-border/50 text-center">
+    <div className="bg-white dark:bg-[#1a1a2e] px-3 py-2 rounded-xl shadow-lg border border-border/50 dark:border-white/10 text-center">
       <p className="text-[11px] font-semibold text-muted-foreground mb-0.5">{name}</p>
       <p className="text-[13px] font-bold" style={{ color }}>{formatCurrency(value)}</p>
     </div>
@@ -184,7 +184,7 @@ export default function AnalyticsPage() {
         <div className="flex items-center gap-3 mb-6">
           <Link
             href="/dashboard"
-            className="p-2.5 rounded-full bg-white border border-border/50 shadow-sm hover:bg-secondary transition-colors"
+            className="p-2.5 rounded-full bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-sm hover:bg-secondary dark:hover:bg-white/10 transition-colors"
           >
             <ChevronLeft className="h-5 w-5 text-foreground" />
           </Link>
@@ -210,7 +210,7 @@ export default function AnalyticsPage() {
                 "px-4 py-2 rounded-[1rem] text-[13px] font-semibold border transition-all",
                 period === p.value
                   ? "gradient-primary text-white border-transparent glow-primary shadow-lg"
-                  : "bg-white text-muted-foreground border-border/50 hover:border-primary/30 shadow-sm"
+                  : "bg-white dark:bg-[#1a1a2e] text-muted-foreground border-border/50 dark:border-white/10 hover:border-primary/30 shadow-sm"
               )}
             >
               {p.label}
@@ -247,7 +247,7 @@ export default function AnalyticsPage() {
           {/* ── KPI cards ── */}
           <div className="grid grid-cols-2 gap-3">
             {/* Total Spend */}
-            <div className="col-span-2 p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
+            <div className="col-span-2 p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
               <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
                 Total Spend
               </p>
@@ -270,11 +270,11 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Billable */}
-            <div className="p-4 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
+            <div className="p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Billable</p>
-                <div className="w-8 h-8 rounded-full bg-violet-50 flex items-center justify-center">
-                  <ReceiptText className="h-4 w-4 text-violet-500" />
+                <div className="w-8 h-8 rounded-full bg-violet-50 dark:bg-violet-500/20 flex items-center justify-center">
+                  <ReceiptText className="h-4 w-4 text-violet-500 dark:text-violet-400" />
                 </div>
               </div>
               <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(billableTotal)}</p>
@@ -284,11 +284,11 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Personal */}
-            <div className="p-4 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
+            <div className="p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Personal</p>
-                <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center">
-                  <ShoppingBag className="h-4 w-4 text-pink-500" />
+                <div className="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-500/20 flex items-center justify-center">
+                  <ShoppingBag className="h-4 w-4 text-pink-500 dark:text-pink-400" />
                 </div>
               </div>
               <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(personalTotal)}</p>
@@ -300,7 +300,7 @@ export default function AnalyticsPage() {
 
           {/* ── Spending Trend ── */}
           {monthlyData.length > 0 && (
-            <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
+            <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-[15px] font-bold text-foreground">Spending Trend</p>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -348,7 +348,7 @@ export default function AnalyticsPage() {
 
           {/* ── Category Breakdown ── */}
           {categoryData.length > 0 && (
-            <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
+            <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
               <p className="text-[15px] font-bold text-foreground mb-0.5">By Category</p>
               <p className="text-[12px] font-medium text-muted-foreground mb-4">Top spending categories</p>
 
@@ -413,7 +413,7 @@ export default function AnalyticsPage() {
           )}
 
           {/* ── Status Overview ── */}
-          <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
+          <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
             <p className="text-[15px] font-bold text-foreground mb-1">Status Overview</p>
             <p className="text-[12px] font-medium text-muted-foreground mb-4">
               Where your money stands
@@ -426,8 +426,8 @@ export default function AnalyticsPage() {
                   count: filtered.filter((t) => t.status === "pending").length,
                   icon: Clock,
                   color: "#f59e0b",
-                  bg: "bg-amber-50",
-                  text: "text-amber-600",
+                  bg: "bg-amber-50 dark:bg-amber-500/20",
+                  text: "text-amber-600 dark:text-amber-400",
                 },
                 {
                   label: "Invoiced",
@@ -435,8 +435,8 @@ export default function AnalyticsPage() {
                   count: filtered.filter((t) => t.status === "invoiced").length,
                   icon: FileCheck,
                   color: "#6366f1",
-                  bg: "bg-indigo-50",
-                  text: "text-indigo-600",
+                  bg: "bg-indigo-50 dark:bg-indigo-500/20",
+                  text: "text-indigo-600 dark:text-indigo-400",
                 },
                 {
                   label: "Paid",
@@ -444,12 +444,12 @@ export default function AnalyticsPage() {
                   count: filtered.filter((t) => t.status === "paid").length,
                   icon: CheckCircle2,
                   color: "#10b981",
-                  bg: "bg-emerald-50",
-                  text: "text-emerald-600",
+                  bg: "bg-emerald-50 dark:bg-emerald-500/20",
+                  text: "text-emerald-600 dark:text-emerald-400",
                 },
               ].map(({ label, amount, count, icon: Icon, color, bg, text }) => (
                 <div key={label} className={cn("rounded-[1.25rem] p-3 sm:p-3.5", bg)}>
-                  <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center mb-2 shadow-sm">
+                  <div className="w-7 h-7 rounded-full bg-white dark:bg-[#1a1a2e] flex items-center justify-center mb-2 shadow-sm">
                     <Icon className={cn("h-3.5 w-3.5", text)} />
                   </div>
                   <p className={cn("text-[10px] sm:text-[11px] font-bold uppercase tracking-wider leading-none mb-1.5", text)}>
@@ -468,7 +468,7 @@ export default function AnalyticsPage() {
 
           {/* ── Top Transactions ── */}
           {topTxns.length > 0 && (
-            <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white border border-border/40 shadow-sm">
+            <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-[15px] font-bold text-foreground">Biggest Expenses</p>

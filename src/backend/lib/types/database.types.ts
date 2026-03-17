@@ -6,11 +6,14 @@ export type InvoiceStatus = "open" | "paid";
 // These mirror the Drizzle schema but with JS-friendly types
 // (numbers instead of numeric strings, etc.)
 
+export type Theme = "light" | "dark";
+
 export interface UserProfile {
   id: string;
   email: string | null;
   full_name: string | null;
   is_sharing_enabled: boolean;
+  theme: Theme;
 }
 
 export interface Category {

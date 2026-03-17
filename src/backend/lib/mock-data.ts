@@ -16,6 +16,7 @@ export const MOCK_PROFILE: UserProfile = {
   email: "thabo@myuniversity.ac.za",
   full_name: "Thabo Dlamini",
   is_sharing_enabled: true,
+  theme: "light",
 };
 
 // ─── Mock Categories ─────────────────────────────────────────

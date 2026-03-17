@@ -7,6 +7,7 @@ import { TransactionListSkeleton } from "@/frontend/components/transaction-card-
 import { PageTransition } from "@/frontend/components/page-transition";
 import { IS_MOCK_MODE, MOCK_TRANSACTIONS, MOCK_CATEGORIES } from "@/backend/lib/mock-data";
 import { getUserTransactions, getCategories } from "@/backend/actions/data";
+import { deleteTransaction } from "@/backend/actions/transactions";
 import type { Transaction, TransactionStatus } from "@/backend/lib/types/database.types";
 import {
   ChevronLeft,
@@ -141,6 +142,16 @@ export default function ExpensesPage() {
   const totalFiltered = sorted.reduce((s, t) => s + t.amount, 0);
   const hasActiveFilters = activeStatus !== "all" || activeCategoryId !== "all" || search.trim() !== "";
 
+  const handleDelete = useCallback(async (id: string) => {
+    setAllTxns((prev) => prev.filter((t) => t.id !== id));
+    try {
+      await deleteTransaction(id);
+    } catch {
+      const [txns] = await Promise.all([getUserTransactions()]);
+      setAllTxns(txns);
+    }
+  }, []);
+
   // Infinite scroll via IntersectionObserver
   const handleLoadMore = useCallback(() => {
     if (!hasMore || loadingMore) return;
@@ -174,7 +185,7 @@ export default function ExpensesPage() {
         <div className="flex items-center gap-3 mb-6">
           <Link
             href="/dashboard"
-            className="p-2.5 rounded-full bg-white border border-border/50 shadow-sm hover:bg-secondary transition-colors"
+            className="p-2.5 rounded-full bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-sm hover:bg-secondary dark:hover:bg-white/10 transition-colors"
           >
             <ChevronLeft className="h-5 w-5 text-foreground" />
           </Link>
@@ -192,7 +203,7 @@ export default function ExpensesPage() {
           </div>
           <Link
             href="/invoices"
-            className="p-2.5 rounded-full bg-white border border-border/50 shadow-sm hover:bg-secondary transition-colors"
+            className="p-2.5 rounded-full bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-sm hover:bg-secondary dark:hover:bg-white/10 transition-colors"
             title="Statements"
           >
             <FileText className="h-5 w-5 text-foreground" />
@@ -203,7 +214,7 @@ export default function ExpensesPage() {
               "p-2.5 rounded-full border shadow-sm transition-all",
               showFilters || activeCategoryId !== "all" || sortBy !== "date-desc"
                 ? "bg-primary text-white border-primary shadow-primary/20"
-                : "bg-white border-border/50 text-foreground"
+                : "bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 text-foreground"
             )}
           >
             <SlidersHorizontal className="h-5 w-5" />
@@ -218,12 +229,12 @@ export default function ExpensesPage() {
             placeholder="Search expenses..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-12 pl-11 pr-10 rounded-[1rem] bg-white border border-border/50 shadow-sm text-[15px] font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full h-12 pl-11 pr-10 rounded-[1rem] bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-sm text-[15px] font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-secondary"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-secondary dark:hover:bg-white/10"
             >
               <X className="h-4 w-4 text-muted-foreground" />
             </button>
@@ -251,7 +262,7 @@ export default function ExpensesPage() {
                       "px-4 py-2 rounded-[1rem] text-[13px] font-semibold border transition-all",
                       sortBy === opt.value
                         ? "bg-foreground text-background border-foreground shadow-md shadow-foreground/10"
-                        : "bg-white border-border/50 text-muted-foreground hover:border-primary/30 shadow-sm"
+                        : "bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 text-muted-foreground hover:border-primary/30 shadow-sm"
                     )}
                   >
                     {opt.label}
@@ -318,7 +329,7 @@ export default function ExpensesPage() {
               "px-5 py-2.5 rounded-[1rem] text-[13px] font-semibold whitespace-nowrap transition-all border",
               activeStatus === tab.value
                 ? "gradient-primary text-white border-transparent glow-primary shadow-lg"
-                : "bg-white text-muted-foreground border-border/50 hover:border-primary/30 shadow-sm shadow-black/5"
+                : "bg-white dark:bg-[#1a1a2e] text-muted-foreground border border-border/50 dark:border-white/10 hover:border-primary/30 shadow-sm shadow-black/5"
             )}
           >
             {tab.label}
@@ -344,7 +355,7 @@ export default function ExpensesPage() {
         {loading ? (
           <TransactionListSkeleton count={7} />
         ) : sorted.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-[1.5rem] border border-border/50 shadow-sm">
+          <div className="flex flex-col items-center justify-center py-16 text-center bg-white dark:bg-[#1a1a2e] rounded-[1.5rem] border border-border/50 dark:border-white/10 shadow-sm">
             <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center mb-4">
               <Search className="h-7 w-7 text-primary/40" />
             </div>
@@ -370,7 +381,7 @@ export default function ExpensesPage() {
           <>
             <div className="space-y-3">
               {visibleTxns.map((txn) => (
-                <TransactionCard key={txn.id} transaction={txn} />
+                <TransactionCard key={txn.id} transaction={txn} onDelete={handleDelete} />
               ))}
             </div>
 
@@ -385,7 +396,7 @@ export default function ExpensesPage() {
                 ) : (
                   <button
                     onClick={handleLoadMore}
-                    className="px-6 py-2.5 rounded-[1rem] text-[13px] font-semibold bg-white border border-border/50 text-muted-foreground shadow-sm hover:border-primary/30 hover:text-primary transition-all"
+                    className="px-6 py-2.5 rounded-[1rem] text-[13px] font-semibold bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 text-muted-foreground shadow-sm hover:border-primary/30 hover:text-primary transition-all"
                   >
                     Load more ({sorted.length - visibleTxns.length} remaining)
                   </button>

@@ -160,7 +160,7 @@ export default function EditTransactionPage() {
       <div className="flex items-center gap-3 px-5 pt-14 pb-6">
         <Link
           href="/expenses"
-          className="p-2.5 rounded-full bg-white border border-border/50 shadow-sm hover:bg-secondary transition-colors"
+          className="p-2.5 rounded-full bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-sm hover:bg-secondary dark:hover:bg-white/10 transition-colors"
         >
           <ChevronLeft className="h-5 w-5 text-foreground" />
         </Link>
@@ -173,7 +173,7 @@ export default function EditTransactionPage() {
         <button
           type="button"
           onClick={() => setShowDeleteConfirm(true)}
-          className="p-2.5 rounded-full bg-white border border-red-200 shadow-sm hover:bg-red-50 transition-colors"
+          className="p-2.5 rounded-full bg-white dark:bg-[#1a1a2e] border border-red-200 dark:border-red-500/20 shadow-sm hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
           title="Delete transaction"
         >
           <Trash2 className="h-5 w-5 text-red-400" />
@@ -182,9 +182,9 @@ export default function EditTransactionPage() {
 
       {/* Locked notice */}
       {isLocked && (
-        <div className="mx-5 mb-5 flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200">
-          <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
-          <p className="text-[13px] text-amber-700 font-medium leading-snug">
+        <div className="mx-5 mb-5 flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+          <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+          <p className="text-[13px] text-amber-700 dark:text-amber-400 font-medium leading-snug">
             This transaction has been <strong>{txn.status}</strong> and is read-only.
             Only the description and category can be changed.
           </p>
@@ -208,7 +208,7 @@ export default function EditTransactionPage() {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               disabled={isLocked}
-              className="pl-9 font-mono text-2xl h-14 bg-white border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground font-bold disabled:opacity-50"
+              className="pl-9 font-mono text-2xl h-14 bg-white dark:bg-[#1a1a2e] border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground font-bold disabled:opacity-50"
               required
             />
           </div>
@@ -225,7 +225,7 @@ export default function EditTransactionPage() {
             placeholder="e.g. Uber Eats, Checkers groceries"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="h-14 bg-white border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus-visible:ring-2 focus-visible:ring-primary/20 px-4 text-[15px] font-medium"
+            className="h-14 bg-white dark:bg-[#1a1a2e] border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus-visible:ring-2 focus-visible:ring-primary/20 px-4 text-[15px] font-medium"
             required
           />
         </div>
@@ -234,7 +234,7 @@ export default function EditTransactionPage() {
         <div className="space-y-2">
           <Label className="text-muted-foreground font-semibold uppercase text-xs tracking-wider">Category</Label>
           <Select value={categoryId} onValueChange={setCategoryId}>
-            <SelectTrigger className="h-14 bg-white border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus:ring-2 focus:ring-primary/20 px-4 font-medium text-[15px]">
+            <SelectTrigger className="h-14 bg-white dark:bg-[#1a1a2e] border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus:ring-2 focus:ring-primary/20 px-4 font-medium text-[15px]">
               <SelectValue placeholder="Select a category" />
             </SelectTrigger>
             <SelectContent className="rounded-[1rem] shadow-xl border-border/50">
@@ -259,7 +259,7 @@ export default function EditTransactionPage() {
             value={date}
             onChange={(e) => setDate(e.target.value)}
             disabled={isLocked}
-            className="h-14 bg-white border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus-visible:ring-2 focus-visible:ring-primary/20 px-4 text-[15px] font-medium disabled:opacity-50"
+            className="h-14 bg-white dark:bg-[#1a1a2e] border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus-visible:ring-2 focus-visible:ring-primary/20 px-4 text-[15px] font-medium disabled:opacity-50"
           />
         </div>
 
@@ -267,7 +267,7 @@ export default function EditTransactionPage() {
         <label
           htmlFor="is_invoicable"
           className={cn(
-            "flex items-center justify-between p-4 mt-2 rounded-[1.25rem] border border-border/50 bg-white shadow-sm",
+            "flex items-center justify-between p-4 mt-2 rounded-[1.25rem] border border-border/50 dark:border-white/10 bg-white dark:bg-[#1a1a2e] shadow-sm",
             isLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer select-none"
           )}
         >
@@ -317,8 +317,8 @@ export default function EditTransactionPage() {
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
           style={{ backgroundColor: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
         >
-          <div className="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl">
-            <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white dark:bg-[#1a1a2e] rounded-[2rem] p-6 w-full max-w-sm shadow-2xl">
+            <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center mx-auto mb-4">
               <Trash2 className="h-7 w-7 text-red-500" />
             </div>
             <h2 className="text-[18px] font-bold text-foreground text-center mb-2">Delete transaction?</h2>
@@ -329,7 +329,7 @@ export default function EditTransactionPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 h-12 rounded-[1rem] border border-border/60 font-bold text-sm hover:bg-muted/50 transition-colors"
+                className="flex-1 h-12 rounded-[1rem] border border-border/60 dark:border-white/10 font-bold text-sm hover:bg-muted/50 dark:hover:bg-white/10 transition-colors"
               >
                 Cancel
               </button>

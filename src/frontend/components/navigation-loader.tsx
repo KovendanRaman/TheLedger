@@ -56,10 +56,10 @@ export function NavigationLoader() {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-300 ${
+      className={`fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-300 bg-[#F4F5FB]/85 dark:bg-[#0f0f14]/85 ${
         loading ? "opacity-100" : "opacity-0"
       }`}
-      style={{ backgroundColor: "rgba(244,245,251,0.85)", backdropFilter: "blur(6px)" }}
+      style={{ backdropFilter: "blur(6px)" }}
     >
       <div className="flex flex-col items-center gap-5">
         {/* Coin animation */}

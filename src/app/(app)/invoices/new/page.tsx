@@ -109,22 +109,22 @@ export default function NewInvoicePage() {
   // ── Loading state ────────────────────────────────────────────
   if (loading) {
     return (
-      <PageTransition className="min-h-screen bg-[#F4F5FB]">
+      <PageTransition className="min-h-screen bg-[#F4F5FB] dark:bg-[#0f0f14]">
         <div className="px-5 pt-10 pb-6">
-          <div className="h-4 w-24 bg-gray-200 rounded-lg animate-pulse mb-5" />
-          <div className="h-7 w-48 bg-gray-200 rounded-lg animate-pulse" />
-          <div className="h-4 w-64 bg-gray-200 rounded-lg animate-pulse mt-2" />
+          <div className="h-4 w-24 bg-gray-200 dark:bg-white/10 rounded-lg animate-pulse mb-5" />
+          <div className="h-7 w-48 bg-gray-200 dark:bg-white/10 rounded-lg animate-pulse" />
+          <div className="h-4 w-64 bg-gray-200 dark:bg-white/10 rounded-lg animate-pulse mt-2" />
         </div>
         <div className="px-5 space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl p-4 border border-border/40 animate-pulse">
+            <div key={i} className="bg-white dark:bg-[#1a1a2e] rounded-2xl p-4 border border-border/40 dark:border-white/10 animate-pulse">
               <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-md bg-gray-200 flex-shrink-0" />
+                <div className="w-6 h-6 rounded-md bg-gray-200 dark:bg-white/10 flex-shrink-0" />
                 <div className="flex-1 space-y-1.5">
-                  <div className="h-4 w-3/4 bg-gray-200 rounded-lg" />
-                  <div className="h-3 w-1/2 bg-gray-100 rounded-lg" />
+                  <div className="h-4 w-3/4 bg-gray-200 dark:bg-white/10 rounded-lg" />
+                  <div className="h-3 w-1/2 bg-gray-100 dark:bg-white/5 rounded-lg" />
                 </div>
-                <div className="h-5 w-16 bg-gray-200 rounded-lg" />
+                <div className="h-5 w-16 bg-gray-200 dark:bg-white/10 rounded-lg" />
               </div>
             </div>
           ))}
@@ -137,7 +137,7 @@ export default function NewInvoicePage() {
   // ── Success state ────────────────────────────────────────────
   if (step === "success") {
     return (
-      <PageTransition className="min-h-screen bg-[#F4F5FB] pb-28 lg:pb-12">
+      <PageTransition className="min-h-screen bg-[#F4F5FB] dark:bg-[#0f0f14] pb-28 lg:pb-12">
         <div className="px-5 pt-10 pb-6">
           <Link
             href="/invoices"
@@ -148,7 +148,7 @@ export default function NewInvoicePage() {
         </div>
 
         <div className="px-5 max-w-lg mx-auto">
-          <div className="bg-white rounded-[2rem] p-8 border border-border/40 shadow-sm text-center">
+          <div className="bg-white dark:bg-[#1a1a2e] rounded-[2rem] p-8 border border-border/40 dark:border-white/10 shadow-sm text-center">
             <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-5">
               <CheckCircle2 className="h-8 w-8 text-emerald-500" />
             </div>
@@ -172,7 +172,7 @@ export default function NewInvoicePage() {
                   return (
                     <div
                       key={link.id}
-                      className="flex items-center gap-3 bg-secondary/30 rounded-xl px-4 py-3"
+                      className="flex items-center gap-3 bg-secondary/30 dark:bg-white/5 rounded-xl px-4 py-3"
                     >
                       <Link2 className="w-4 h-4 text-muted-foreground shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -185,7 +185,7 @@ export default function NewInvoicePage() {
                           "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
                           isCopied
                             ? "bg-emerald-100 text-emerald-600"
-                            : "bg-white border border-border/60 text-foreground hover:bg-muted/50"
+                            : "bg-white dark:bg-[#1a1a2e] border border-border/60 dark:border-white/10 text-foreground hover:bg-muted/50"
                         )}
                       >
                         {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -204,7 +204,7 @@ export default function NewInvoicePage() {
                 })}
               </div>
             ) : (
-              <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl px-4 py-3 text-sm text-left">
+              <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-xl px-4 py-3 text-sm text-left">
                 You haven&apos;t set up any parental share links yet.{" "}
                 <Link href="/settings" className="font-bold underline">
                   Create one in Settings
@@ -240,7 +240,7 @@ export default function NewInvoicePage() {
   // Full-height flex column: header + scrollable list + action bar.
   // No fixed positioning — the bar is part of the natural layout flow.
   return (
-    <PageTransition className="h-screen flex flex-col bg-[#F4F5FB] overflow-hidden">
+    <PageTransition className="h-screen flex flex-col bg-[#F4F5FB] dark:bg-[#0f0f14] overflow-hidden">
 
       {/* Header */}
       <div className="px-5 pt-10 pb-4 flex-shrink-0">
@@ -259,7 +259,7 @@ export default function NewInvoicePage() {
       {txns.length === 0 ? (
         /* Empty state — centred in remaining space */
         <div className="flex-1 flex items-center justify-center px-5">
-          <div className="flex flex-col items-center text-center bg-white rounded-[1.5rem] border border-border/50 shadow-sm p-10 w-full max-w-sm">
+          <div className="flex flex-col items-center text-center bg-white dark:bg-[#1a1a2e] rounded-[1.5rem] border border-border/50 dark:border-white/10 shadow-sm p-10 w-full max-w-sm">
             <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mb-4">
               <FileText className="h-7 w-7 text-muted-foreground" />
             </div>
@@ -289,7 +289,7 @@ export default function NewInvoicePage() {
                   "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
                   selected.size === txns.length
                     ? "bg-primary border-primary"
-                    : "border-gray-300"
+                    : "border-gray-300 dark:border-gray-600"
                 )}
               >
                 {selected.size === txns.length && <Check className="w-3.5 h-3.5 text-white" />}
@@ -310,7 +310,7 @@ export default function NewInvoicePage() {
                   key={txn.id}
                   onClick={() => toggle(txn.id)}
                   className={cn(
-                    "w-full flex items-center gap-3 bg-white rounded-2xl p-4 border transition-all text-left",
+                    "w-full flex items-center gap-3 bg-white dark:bg-[#1a1a2e] rounded-2xl p-4 border transition-all text-left",
                     isSelected
                       ? "border-primary/40 shadow-[0_0_0_1px_rgba(99,102,241,0.15)] bg-primary/[0.02]"
                       : "border-border/40 hover:border-border/70"
@@ -319,7 +319,7 @@ export default function NewInvoicePage() {
                   <div
                     className={cn(
                       "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all shrink-0",
-                      isSelected ? "bg-primary border-primary" : "border-gray-300"
+                      isSelected ? "bg-primary border-primary" : "border-gray-300 dark:border-gray-600"
                     )}
                   >
                     {isSelected && <Check className="w-4 h-4 text-white" />}
@@ -357,7 +357,7 @@ export default function NewInvoicePage() {
 
       {/* Action bar — naturally at the bottom of the flex column, no fixed needed */}
       {txns.length > 0 && (
-        <div className="flex-shrink-0 bg-white/90 backdrop-blur-md border-t border-border/30 px-5 py-4 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] lg:mb-0 mb-16">
+        <div className="flex-shrink-0 bg-white/90 dark:bg-[#1a1a2e]/90 backdrop-blur-md border-t border-border/30 px-5 py-4 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] lg:mb-0 mb-16">
           <div className="flex items-center justify-between gap-4">
             {/* Summary */}
             <div className="flex items-center gap-3">

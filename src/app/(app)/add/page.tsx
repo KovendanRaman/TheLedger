@@ -68,7 +68,7 @@ export default function AddTransactionPage() {
       <div className="flex items-center gap-3 px-5 pt-14 pb-6">
         <Link
           href="/dashboard"
-          className="p-2.5 rounded-full bg-white border border-border/50 shadow-sm hover:bg-secondary transition-colors"
+          className="p-2.5 rounded-full bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-sm hover:bg-secondary dark:hover:bg-white/10 transition-colors"
         >
           <ChevronLeft className="h-5 w-5 text-foreground" />
         </Link>
@@ -91,7 +91,7 @@ export default function AddTransactionPage() {
               placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="pl-9 font-mono text-2xl h-14 bg-white border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground font-bold"
+              className="pl-9 font-mono text-2xl h-14 bg-white dark:bg-[#1a1a2e] border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground font-bold"
               required
             />
           </div>
@@ -106,7 +106,7 @@ export default function AddTransactionPage() {
             placeholder="e.g. Uber Eats, Checkers groceries"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="h-14 bg-white border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus-visible:ring-2 focus-visible:ring-primary/20 px-4 text-[15px] font-medium"
+            className="h-14 bg-white dark:bg-[#1a1a2e] border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus-visible:ring-2 focus-visible:ring-primary/20 px-4 text-[15px] font-medium"
             required
           />
         </div>
@@ -115,7 +115,7 @@ export default function AddTransactionPage() {
         <div className="space-y-2">
           <Label className="text-muted-foreground font-semibold uppercase text-xs tracking-wider">Category</Label>
           <Select value={categoryId} onValueChange={setCategoryId}>
-            <SelectTrigger id="category" className="h-14 bg-white border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus:ring-2 focus:ring-primary/20 px-4 font-medium text-[15px]">
+            <SelectTrigger id="category" className="h-14 bg-white dark:bg-[#1a1a2e] border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus:ring-2 focus:ring-primary/20 px-4 font-medium text-[15px]">
               <SelectValue placeholder="Select a category" />
             </SelectTrigger>
             <SelectContent className="rounded-[1rem] shadow-xl border-border/50">
@@ -142,14 +142,14 @@ export default function AddTransactionPage() {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="h-14 bg-white border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus-visible:ring-2 focus-visible:ring-primary/20 px-4 text-[15px] font-medium"
+            className="h-14 bg-white dark:bg-[#1a1a2e] border-none shadow-[0_2px_10px_rgb(0,0,0,0.03)] rounded-[1rem] focus-visible:ring-2 focus-visible:ring-primary/20 px-4 text-[15px] font-medium"
           />
         </div>
 
         {/* Invoicable Toggle */}
         <label
           htmlFor="is_invoicable"
-          className="flex items-center justify-between p-4 mt-2 rounded-[1.25rem] border border-border/50 bg-white shadow-sm cursor-pointer select-none"
+          className="flex items-center justify-between p-4 mt-2 rounded-[1.25rem] border border-border/50 dark:border-white/10 bg-white dark:bg-[#1a1a2e] shadow-sm cursor-pointer select-none"
         >
           <div className="flex items-center gap-4">
             <div className="p-2.5 rounded-xl bg-primary/10">

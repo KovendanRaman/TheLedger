@@ -87,7 +87,7 @@ export default function InvoicesPage() {
   }, [startTransition]);
 
   return (
-    <PageTransition className="min-h-screen bg-[#F4F5FB] pb-32">
+    <PageTransition className="min-h-screen bg-[#F4F5FB] dark:bg-[#0f0f14] pb-32">
       {/* Header */}
       <div className="flex items-end justify-between px-5 pt-14 pb-6">
         <div>
@@ -143,7 +143,7 @@ export default function InvoicesPage() {
             <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
           </div>
         ) : invoices.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-[1.5rem] border border-border/50 shadow-sm">
+          <div className="flex flex-col items-center justify-center py-16 text-center bg-white dark:bg-[#1a1a2e] rounded-[1.5rem] border border-border/50 dark:border-white/10 shadow-sm">
             <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
               <FileText className="h-8 w-8 text-muted-foreground" />
             </div>

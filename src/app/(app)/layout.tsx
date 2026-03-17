@@ -1,29 +1,35 @@
 import React from "react";
 import { Sidebar } from "@/frontend/components/sidebar";
 import { AppFooter } from "@/frontend/components/app-footer";
+import { ThemeProvider } from "@/frontend/components/theme-provider";
+import { getUserProfile } from "@/backend/actions/data";
 
 export const dynamic = "force-dynamic";
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-screen bg-[#F4F5FB] flex flex-row">
-      {/* Sidebar: sticky, takes its own width, pushes content */}
-      <Sidebar />
+  const profile = await getUserProfile();
 
-      {/* Content column: grows to fill remaining width */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <main className="flex-1 w-full">
-          {children}
-        </main>
-        {/* Bottom padding on mobile so footer clears the fixed bottom nav */}
-        <div className="pb-28 lg:pb-0">
-          <AppFooter />
+  return (
+    <ThemeProvider
+      initialTheme={profile?.theme ?? "light"}
+      userId={profile?.id ?? ""}
+    >
+      <div className="min-h-screen bg-[#F4F5FB] dark:bg-[#0f0f14] flex flex-row transition-colors duration-300">
+        <Sidebar />
+
+        <div className="flex-1 flex flex-col min-w-0">
+          <main className="flex-1 w-full">
+            {children}
+          </main>
+          <div className="pb-28 lg:pb-0">
+            <AppFooter />
+          </div>
         </div>
       </div>
-    </div>
+    </ThemeProvider>
   );
 }

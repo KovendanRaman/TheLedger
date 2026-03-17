@@ -7,13 +7,14 @@ import { registerUser } from "@/backend/actions/auth";
 import { Button } from "@/frontend/components/ui/button";
 import { Input } from "@/frontend/components/ui/input";
 import { Label } from "@/frontend/components/ui/label";
-import { Loader2, BookOpen, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Loader2, BookOpen, AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -114,25 +115,32 @@ export default function SignupPage() {
               <div className="relative">
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Min 8 characters"
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(null); }}
                   className={cn(
-                    "h-14 bg-secondary/30 border-none shadow-sm rounded-xl px-4 font-medium text-[15px] focus-visible:ring-2 focus-visible:ring-primary/20",
+                    "h-14 bg-secondary/30 border-none shadow-sm rounded-xl px-4 pr-20 font-medium text-[15px] focus-visible:ring-2 focus-visible:ring-primary/20",
                     password.length > 0 && !passwordStrong && "ring-2 ring-red-300"
                   )}
                   required
                   autoComplete="new-password"
                 />
-                {password.length > 0 && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                    {passwordStrong
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {password.length > 0 && (
+                    passwordStrong
                       ? <CheckCircle2 className="h-5 w-5 text-green-500" />
                       : <AlertCircle className="h-5 w-5 text-red-400" />
-                    }
-                  </div>
-                )}
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
               </div>
               {password.length > 0 && !passwordStrong && (
                 <p className="text-xs text-red-500 font-medium pl-1">

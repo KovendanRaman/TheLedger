@@ -31,7 +31,7 @@ export function SpendingCategoryChart({ transactions }: { transactions: Transact
     if (active && payload && payload.length) {
       const { name, value, color } = payload[0].payload;
       return (
-        <div className="bg-white px-3 py-2 rounded-xl shadow-lg border border-border/50 text-center">
+        <div className="bg-white dark:bg-[#1a1a2e] px-3 py-2 rounded-xl shadow-lg border border-border/50 dark:border-white/10 text-center">
           <p className="text-xs font-semibold text-muted-foreground mb-1">{name}</p>
           <p className="text-sm font-bold text-foreground" style={{ color: color }}>
             R {value.toLocaleString("en-ZA")}
