@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import { authConfig } from "@/backend/lib/auth/config";
 import { NextResponse } from "next/server";
 
-const PUBLIC_ROUTES = ["/login", "/signup", "/view"];
+const PUBLIC_ROUTES = ["/", "/login", "/signup", "/view"];
 const AUTH_PAGES = ["/login", "/signup"];
 
 const { auth } = NextAuth(authConfig);
@@ -18,14 +18,10 @@ export default auth((req) => {
   }
 
   const isLoggedIn = !!req.auth;
-  const isPublicRoute = PUBLIC_ROUTES.some((r) => pathname.startsWith(r));
+  const isPublicRoute = PUBLIC_ROUTES.some((r) =>
+    r === "/" ? pathname === "/" : pathname.startsWith(r)
+  );
   const isAuthPage = AUTH_PAGES.some((r) => pathname === r);
-
-  if (pathname === "/") {
-    return NextResponse.redirect(
-      new URL(isLoggedIn ? "/dashboard" : "/login", req.url)
-    );
-  }
 
   if (!isLoggedIn && !isPublicRoute) {
     const loginUrl = new URL("/login", req.url);

@@ -7,13 +7,14 @@ import { signIn } from "next-auth/react";
 import { Button } from "@/frontend/components/ui/button";
 import { Input } from "@/frontend/components/ui/input";
 import { Label } from "@/frontend/components/ui/label";
-import { Loader2, BookOpen, AlertCircle } from "lucide-react";
+import { Loader2, BookOpen, AlertCircle, Eye, EyeOff } from "lucide-react";
 
 function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,16 +80,26 @@ function LoginForm() {
             <Label htmlFor="password" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
               Password
             </Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(null); }}
-              className="h-14 bg-secondary/30 border-none shadow-sm rounded-xl px-4 font-medium text-[15px] focus-visible:ring-2 focus-visible:ring-primary/20"
-              required
-              autoComplete="current-password"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(null); }}
+                className="h-14 bg-secondary/30 border-none shadow-sm rounded-xl px-4 pr-12 font-medium text-[15px] focus-visible:ring-2 focus-visible:ring-primary/20"
+                required
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
           </div>
 
           <Button

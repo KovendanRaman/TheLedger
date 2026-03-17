@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { cn } from "@/backend/lib/utils";
 import {
   LayoutDashboard,
@@ -50,7 +51,7 @@ export function Sidebar() {
       )}
     >
       {/* Logo Area */}
-      <div className="h-[70px] flex items-center px-[14px] flex-shrink-0 overflow-hidden">
+      <Link href="/dashboard" className="h-[70px] flex items-center px-[14px] flex-shrink-0 overflow-hidden hover:opacity-80 transition-opacity">
         <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center flex-shrink-0">
           <span className="text-white font-bold text-lg font-mono">L</span>
         </div>
@@ -65,7 +66,7 @@ export function Sidebar() {
         >
           The Ledger
         </span>
-      </div>
+      </Link>
 
       {/* Main Navigation */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
@@ -135,7 +136,10 @@ export function Sidebar() {
         </button>
 
         {/* Log out */}
-        <button className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-[15px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors text-left whitespace-nowrap overflow-hidden">
+        <button
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-[15px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors text-left whitespace-nowrap overflow-hidden"
+        >
           <LogOut className="h-5 w-5 flex-shrink-0" strokeWidth={2} />
           <span
             className={cn(

@@ -316,7 +316,7 @@ export default function SettingsPage() {
       toast.info("[Mock] Sign out — connect a real DB to enable auth.");
       return;
     }
-    await signOut({ callbackUrl: "/login" });
+    await signOut({ callbackUrl: "/" });
   }
 
   const sharingEnabled = profile?.is_sharing_enabled ?? false;

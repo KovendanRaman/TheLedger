@@ -102,6 +102,17 @@
   }
 }
 
+@layer base {
+  body,
+  .bg-\[\#F4F5FB\],
+  .bg-background {
+    background-color: #F4F5FB !important;
+    background-image:
+      radial-gradient(circle, rgba(99, 102, 241, 0.07) 1px, transparent 1px) !important;
+    background-size: 24px 24px !important;
+  }
+}
+
 @layer utilities {
   .gradient-primary {
     @apply bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] text-white;
