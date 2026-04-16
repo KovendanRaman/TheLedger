@@ -240,10 +240,10 @@ export default function NewInvoicePage() {
   // Full-height flex column: header + scrollable list + action bar.
   // No fixed positioning — the bar is part of the natural layout flow.
   return (
-    <PageTransition className="h-screen flex flex-col bg-[#F4F5FB] dark:bg-[#0f0f14] overflow-hidden">
+    <PageTransition className="min-h-screen bg-[#F4F5FB] dark:bg-[#0f0f14]">
 
       {/* Header */}
-      <div className="px-5 pt-10 pb-4 flex-shrink-0">
+      <div className="px-5 pt-10 pb-4">
         <Link
           href="/invoices"
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors mb-4"
@@ -279,7 +279,7 @@ export default function NewInvoicePage() {
       ) : (
         <>
           {/* Select-all row */}
-          <div className="px-5 pb-2 flex-shrink-0 flex items-center justify-between">
+          <div className="px-5 pb-2 flex items-center justify-between">
             <button
               onClick={selectAll}
               className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
@@ -301,8 +301,8 @@ export default function NewInvoicePage() {
             </span>
           </div>
 
-          {/* Scrollable transaction list */}
-          <div className="flex-1 overflow-y-auto px-5 space-y-2 pb-3">
+          {/* Transaction list — extra bottom padding clears the fixed action bar + BottomNav */}
+          <div className="px-5 space-y-2 pb-[14rem] lg:pb-8">
             {txns.map((txn) => {
               const isSelected = selected.has(txn.id);
               return (
@@ -355,9 +355,10 @@ export default function NewInvoicePage() {
         </>
       )}
 
-      {/* Action bar — naturally at the bottom of the flex column, no fixed needed */}
+      {/* Action bar — fixed above the BottomNav on mobile, at bottom on desktop.
+           The BottomNav pill is ~5rem tall (pill + mb-6 gap), so we offset by that. */}
       {txns.length > 0 && (
-        <div className="flex-shrink-0 bg-white/90 dark:bg-[#1a1a2e]/90 backdrop-blur-md border-t border-border/30 px-5 py-4 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] lg:mb-0 mb-16">
+        <div className="fixed bottom-[5rem] lg:bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#1a1a2e]/95 backdrop-blur-md border-t border-border/30 px-5 py-4 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-between gap-4">
             {/* Summary */}
             <div className="flex items-center gap-3">

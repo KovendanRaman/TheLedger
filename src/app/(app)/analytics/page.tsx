@@ -161,12 +161,18 @@ export default function AnalyticsPage() {
     return Object.values(totals).sort((a, b) => b.amount - a.amount).slice(0, 6);
   }, [filtered, categories]);
 
-  // ─── Status breakdown ───────────────────────────────────────────────────────
+  // ─── Status breakdown (billable transactions only) ──────────────────────────
+  // Personal items are auto-set to 'paid' to skip the invoice queue,
+  // so we must exclude them from the billable status buckets to avoid confusion.
   const statusData = useMemo(() => {
-    const pending = filtered.filter((t) => t.status === "pending").reduce((s, t) => s + t.amount, 0);
-    const invoiced = filtered.filter((t) => t.status === "invoiced").reduce((s, t) => s + t.amount, 0);
-    const paid = filtered.filter((t) => t.status === "paid").reduce((s, t) => s + t.amount, 0);
-    return { pending, invoiced, paid, total: pending + invoiced + paid };
+    const billable = filtered.filter((t) => t.is_invoicable);
+    const pending  = billable.filter((t) => t.status === "pending").reduce((s, t) => s + t.amount, 0);
+    const invoiced = billable.filter((t) => t.status === "invoiced").reduce((s, t) => s + t.amount, 0);
+    const settled  = billable.filter((t) => t.status === "paid").reduce((s, t) => s + t.amount, 0);
+    const pendingCount  = billable.filter((t) => t.status === "pending").length;
+    const invoicedCount = billable.filter((t) => t.status === "invoiced").length;
+    const settledCount  = billable.filter((t) => t.status === "paid").length;
+    return { pending, invoiced, settled, pendingCount, invoicedCount, settledCount };
   }, [filtered]);
 
   // ─── Top transactions ───────────────────────────────────────────────────────
@@ -414,40 +420,40 @@ export default function AnalyticsPage() {
 
           {/* ── Status Overview ── */}
           <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
-            <p className="text-[15px] font-bold text-foreground mb-1">Status Overview</p>
+            <p className="text-[15px] font-bold text-foreground mb-0.5">Status Overview</p>
             <p className="text-[12px] font-medium text-muted-foreground mb-4">
-              Where your money stands
+              Billable transactions only
             </p>
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {[
                 {
                   label: "Pending",
+                  sublabel: "awaiting invoice",
                   amount: statusData.pending,
-                  count: filtered.filter((t) => t.status === "pending").length,
+                  count: statusData.pendingCount,
                   icon: Clock,
-                  color: "#f59e0b",
                   bg: "bg-amber-50 dark:bg-amber-500/20",
                   text: "text-amber-600 dark:text-amber-400",
                 },
                 {
                   label: "Invoiced",
+                  sublabel: "on open invoice",
                   amount: statusData.invoiced,
-                  count: filtered.filter((t) => t.status === "invoiced").length,
+                  count: statusData.invoicedCount,
                   icon: FileCheck,
-                  color: "#6366f1",
                   bg: "bg-indigo-50 dark:bg-indigo-500/20",
                   text: "text-indigo-600 dark:text-indigo-400",
                 },
                 {
-                  label: "Paid",
-                  amount: statusData.paid,
-                  count: filtered.filter((t) => t.status === "paid").length,
+                  label: "Settled",
+                  sublabel: "paid by parent",
+                  amount: statusData.settled,
+                  count: statusData.settledCount,
                   icon: CheckCircle2,
-                  color: "#10b981",
                   bg: "bg-emerald-50 dark:bg-emerald-500/20",
                   text: "text-emerald-600 dark:text-emerald-400",
                 },
-              ].map(({ label, amount, count, icon: Icon, color, bg, text }) => (
+              ].map(({ label, sublabel, amount, count, icon: Icon, bg, text }) => (
                 <div key={label} className={cn("rounded-[1.25rem] p-3 sm:p-3.5", bg)}>
                   <div className="w-7 h-7 rounded-full bg-white dark:bg-[#1a1a2e] flex items-center justify-center mb-2 shadow-sm">
                     <Icon className={cn("h-3.5 w-3.5", text)} />
@@ -507,9 +513,22 @@ export default function AnalyticsPage() {
 
                       {/* Description + bar */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-foreground truncate leading-none mb-1.5">
-                          {txn.description}
-                        </p>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <p className="text-[13px] font-semibold text-foreground truncate leading-none">
+                            {txn.description}
+                          </p>
+                          {/* Personal / Billable pill */}
+                          <span
+                            className={cn(
+                              "inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide flex-shrink-0",
+                              txn.is_invoicable
+                                ? "bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400"
+                                : "bg-muted/60 text-muted-foreground"
+                            )}
+                          >
+                            {txn.is_invoicable ? "Billable" : "Personal"}
+                          </span>
+                        </div>
                         <div className="h-1 rounded-full bg-muted overflow-hidden">
                           <div
                             className="h-full rounded-full"
