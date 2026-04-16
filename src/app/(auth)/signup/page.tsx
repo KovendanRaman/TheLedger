@@ -7,13 +7,14 @@ import { registerUser } from "@/backend/actions/auth";
 import { Button } from "@/frontend/components/ui/button";
 import { Input } from "@/frontend/components/ui/input";
 import { Label } from "@/frontend/components/ui/label";
-import { Loader2, BookOpen, AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { Loader2, BookOpen, AlertCircle, CheckCircle2, Eye, EyeOff, Receipt, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [appMode, setAppMode] = useState<"INVOICE" | "ALLOWANCE">("ALLOWANCE");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +32,7 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const { error: regError } = await registerUser(fullName, email, password);
+    const { error: regError } = await registerUser(fullName, email, password, appMode);
     if (regError) {
       setError(regError);
       setLoading(false);
@@ -49,7 +50,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5 bg-background relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-5 bg-background relative overflow-hidden pt-12 pb-12">
       <div className="absolute top-0 w-full h-full pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-300/10 blur-3xl" />
@@ -75,7 +76,7 @@ export default function SignupPage() {
             </div>
           )}
 
-          <form onSubmit={handleSignup} className="space-y-5">
+          <form onSubmit={handleSignup} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="full-name" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
                 Full Name
@@ -149,9 +150,71 @@ export default function SignupPage() {
               )}
             </div>
 
+            {/* App Mode Prompt Section */}
+            <div className="pt-2">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-3 block">
+                How will you use The Ledger?
+              </Label>
+              <div className="grid grid-cols-1 gap-3">
+                {/* Option 2: Allowance / Budget */}
+                <button
+                  type="button"
+                  onClick={() => setAppMode("ALLOWANCE")}
+                  className={cn(
+                    "flex text-left gap-4 p-4 rounded-2xl border transition-all duration-300",
+                    appMode === "ALLOWANCE"
+                      ? "border-emerald-500/50 bg-emerald-50/50 shadow-[0_4px_20px_rgba(16,185,129,0.1)]"
+                      : "border-border/60 bg-transparent hover:border-border hover:bg-secondary/20"
+                  )}
+                >
+                  <div className={cn(
+                    "mt-1 w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                    appMode === "ALLOWANCE" ? "bg-emerald-100 text-emerald-600" : "bg-secondary text-muted-foreground"
+                  )}>
+                    <Wallet className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className={cn("text-[15px] font-bold mb-1", appMode === "ALLOWANCE" ? "text-emerald-700" : "text-foreground")}>
+                      Budget Tracking
+                    </h3>
+                    <p className="text-[13px] text-muted-foreground font-medium leading-relaxed">
+                      Track your personal allowance, manage a monthly bursary, and monitor cashflow.
+                    </p>
+                  </div>
+                </button>
+
+                {/* Option 1: Invoice */}
+                <button
+                  type="button"
+                  onClick={() => setAppMode("INVOICE")}
+                  className={cn(
+                    "flex text-left gap-4 p-4 rounded-2xl border transition-all duration-300",
+                    appMode === "INVOICE"
+                      ? "border-primary/50 bg-primary/5 shadow-[0_4px_20px_rgba(99,102,241,0.1)]"
+                      : "border-border/60 bg-transparent hover:border-border hover:bg-secondary/20"
+                  )}
+                >
+                  <div className={cn(
+                    "mt-1 w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                    appMode === "INVOICE" ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"
+                  )}>
+                    <Receipt className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className={cn("text-[15px] font-bold mb-1", appMode === "INVOICE" ? "text-primary" : "text-foreground")}>
+                      Parent Invoicing
+                    </h3>
+                    <p className="text-[13px] text-muted-foreground font-medium leading-relaxed">
+                      Log textbooks, rent, and groceries to generate shareable statements for parents.
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
             <Button
               type="submit"
-              className="w-full h-14 rounded-full font-bold text-base shadow-lg shadow-primary/25 hover:shadow-xl transition-all gradient-primary mt-2"
+              className="w-full h-14 rounded-full font-bold text-base shadow-lg shadow-primary/25 hover:shadow-xl transition-all gradient-primary mt-6"
               disabled={loading}
             >
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Create Account"}

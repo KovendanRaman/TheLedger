@@ -1,6 +1,7 @@
 // ─── Enums ────────────────────────────────────────────────────
 export type TransactionStatus = "pending" | "invoiced" | "paid";
 export type InvoiceStatus = "open" | "paid";
+export type AppMode = "INVOICE" | "ALLOWANCE";
 
 // ─── Domain types (used throughout the app) ───────────────────
 // These mirror the Drizzle schema but with JS-friendly types
@@ -14,6 +15,8 @@ export interface UserProfile {
   full_name: string | null;
   is_sharing_enabled: boolean;
   theme: Theme;
+  appMode: AppMode;
+  allowanceResetDay: number;
 }
 
 export interface Category {
@@ -66,4 +69,35 @@ export interface ParentalViewRow {
   date: string;
   invoice_id: string | null;
   month_label: string | null;
+}
+
+export interface Income {
+  id: string;
+  user_id: string;
+  amount: number;
+  source: string;
+  is_recurring: boolean;
+  date: string;
+  created_at: string;
+}
+
+export interface RecurringExpense {
+  id: string;
+  user_id: string;
+  name: string;
+  amount: number;
+  billing_date: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface AllowanceDashboardData {
+  safeToSpend: number;
+  baseline: number;
+  obligations: number;
+  variableSpend: number;
+  cycleStart: string;
+  cycleEnd: string;
+  recentTxns: Transaction[];
+  recurringExpenses: RecurringExpense[];
 }

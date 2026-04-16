@@ -17,6 +17,8 @@ export const MOCK_PROFILE: UserProfile = {
   full_name: "Thabo Dlamini",
   is_sharing_enabled: true,
   theme: "light",
+  appMode: "INVOICE",
+  allowanceResetDay: 1,
 };
 
 // ─── Mock Categories ─────────────────────────────────────────

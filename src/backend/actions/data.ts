@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, and, or, isNull, desc } from "drizzle-orm";
+import { eq, and, or, isNull, desc, gte, lte, sum } from "drizzle-orm";
 import { db } from "@/backend/lib/db";
 import {
   transactions,
@@ -8,6 +8,8 @@ import {
   invoices,
   users,
   parentalLinks,
+  incomes,
+  recurringExpenses,
 } from "@/backend/lib/db/schema";
 import { auth } from "@/backend/lib/auth";
 import type {
@@ -16,7 +18,9 @@ import type {
   Invoice,
   UserProfile,
   ParentalLink,
+  AllowanceDashboardData,
 } from "@/backend/lib/types/database.types";
+import { getBillingCycle } from "@/backend/lib/dates";
 
 // ─── Helpers ──────────────────────────────────────────────────
 
@@ -249,6 +253,8 @@ export async function getUserProfile(): Promise<UserProfile | null> {
       fullName: users.fullName,
       isSharingEnabled: users.isSharingEnabled,
       theme: users.theme,
+      appMode: users.appMode,
+      allowanceResetDay: users.allowanceResetDay,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -263,10 +269,12 @@ export async function getUserProfile(): Promise<UserProfile | null> {
     full_name: u.fullName,
     is_sharing_enabled: u.isSharingEnabled,
     theme: (u.theme === "dark" ? "dark" : "light") as "light" | "dark",
+    appMode: u.appMode,
+    allowanceResetDay: u.allowanceResetDay,
   };
 }
 
-// ─── Dashboard data (server component use) ───────────────────
+// ─── Dashboard data (server component use) ───────────────────────
 
 export async function getDashboardData(userId: string) {
   const rows = await db
@@ -307,6 +315,118 @@ export async function getDashboardData(userId: string) {
   }));
 }
 
+// ─── Allowance Dashboard data ─────────────────────────────────
+
+export async function getAllowanceDashboardData(
+  userId: string
+): Promise<AllowanceDashboardData> {
+  // Fetch the user's reset day
+  const [userRow] = await db
+    .select({ allowanceResetDay: users.allowanceResetDay })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  const resetDay = userRow?.allowanceResetDay ?? 1;
+  const { startDate, endDate } = getBillingCycle(new Date(), resetDay);
+
+  const startStr = startDate.toISOString().split("T")[0];
+  const endStr = endDate.toISOString().split("T")[0];
+
+  const [incomeRows, recurringRows, txnRows] = await Promise.all([
+    // Income within the billing cycle
+    db
+      .select()
+      .from(incomes)
+      .where(
+        and(
+          eq(incomes.userId, userId),
+          gte(incomes.date, startStr),
+          lte(incomes.date, endStr)
+        )
+      ),
+    // Active recurring expenses (debit orders)
+    db
+      .select()
+      .from(recurringExpenses)
+      .where(
+        and(
+          eq(recurringExpenses.userId, userId),
+          eq(recurringExpenses.isActive, true)
+        )
+      ),
+    // Transactions (variable spend) within the billing cycle
+    db
+      .select({
+        id: transactions.id,
+        userId: transactions.userId,
+        amount: transactions.amount,
+        description: transactions.description,
+        categoryId: transactions.categoryId,
+        isInvoicable: transactions.isInvoicable,
+        status: transactions.status,
+        invoiceId: transactions.invoiceId,
+        date: transactions.date,
+        createdAt: transactions.createdAt,
+        categoryName: categories.name,
+        categoryColor: categories.color,
+      })
+      .from(transactions)
+      .leftJoin(categories, eq(transactions.categoryId, categories.id))
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          gte(transactions.date, startStr),
+          lte(transactions.date, endStr)
+        )
+      )
+      .orderBy(desc(transactions.createdAt))
+      .limit(50),
+  ]);
+
+  const baseline = incomeRows.reduce((s, r) => s + Number(r.amount), 0);
+  const obligations = recurringRows.reduce((s, r) => s + Number(r.amount), 0);
+  const variableSpend = txnRows.reduce((s, r) => s + Number(r.amount), 0);
+  const safeToSpend = baseline - obligations - variableSpend;
+
+  const mappedTxns: Transaction[] = txnRows.map((r) => ({
+    id: r.id,
+    user_id: r.userId,
+    amount: Number(r.amount),
+    description: r.description,
+    category_id: r.categoryId,
+    is_invoicable: r.isInvoicable,
+    status: r.status,
+    invoice_id: r.invoiceId,
+    date: r.date,
+    created_at: r.createdAt.toISOString(),
+    categories: r.categoryName
+      ? { name: r.categoryName, color: r.categoryColor! }
+      : null,
+  }));
+
+  const mappedRecurring = recurringRows.map((r) => ({
+    id: r.id,
+    user_id: r.userId,
+    name: r.name,
+    amount: Number(r.amount),
+    billing_date: r.billingDate,
+    is_active: r.isActive,
+    created_at: r.createdAt.toISOString(),
+  }));
+
+  return {
+    safeToSpend,
+    baseline,
+    obligations,
+    variableSpend,
+    cycleStart: startStr,
+    cycleEnd: endStr,
+    recentTxns: mappedTxns,
+    recurringExpenses: mappedRecurring,
+  };
+}
+
 // ─── Invoice with transactions (for PDF print view) ──────────
 
 export async function getInvoiceWithTransactions(invoiceId: string): Promise<{
@@ -343,7 +463,14 @@ export async function getInvoiceWithTransactions(invoiceId: string): Promise<{
       .where(eq(transactions.invoiceId, invoiceId))
       .orderBy(transactions.date),
     db
-      .select({ id: users.id, email: users.email, fullName: users.fullName, isSharingEnabled: users.isSharingEnabled })
+      .select({ 
+        id: users.id, 
+        email: users.email, 
+        fullName: users.fullName, 
+        isSharingEnabled: users.isSharingEnabled,
+        appMode: users.appMode,
+        allowanceResetDay: users.allowanceResetDay,
+      })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1),
@@ -381,6 +508,8 @@ export async function getInvoiceWithTransactions(invoiceId: string): Promise<{
           full_name: profileRows[0].fullName,
           is_sharing_enabled: profileRows[0].isSharingEnabled,
           theme: "light" as const,
+          appMode: profileRows[0].appMode,
+          allowanceResetDay: profileRows[0].allowanceResetDay,
         }
       : null,
   };
@@ -404,5 +533,27 @@ export async function getParentalLinksForUser(): Promise<ParentalLink[]> {
     key: r.key,
     label: r.label,
     created_at: r.createdAt.toISOString(),
+  }));
+}
+
+// ─── Analytics Helpers ────────────────────────────────────────
+
+export async function getUserIncomes() {
+  const userId = await getAuthUserId();
+  if (!userId) return [];
+
+  const { incomes } = await import("@/backend/lib/db/schema");
+  const rows = await db
+    .select()
+    .from(incomes)
+    .where(eq(incomes.userId, userId))
+    .orderBy(incomes.date);
+
+  return rows.map((r) => ({
+    id: r.id,
+    amount: Number(r.amount),
+    source: r.source,
+    date: r.date,
+    is_recurring: r.isRecurring,
   }));
 }
