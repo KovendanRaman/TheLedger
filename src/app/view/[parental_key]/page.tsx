@@ -197,7 +197,7 @@ export default async function ParentalViewPage({ params }: Props) {
                           <p className="text-[15px] font-bold font-mono text-foreground">
                             {formatCurrency(row.amount)}
                           </p>
-                          <StatusBadge status={row.status} className="mt-1" />
+                          <StatusBadge status={row.status} isInvoicable={true} className="mt-1" />
                         </div>
                       </div>
                     ))}

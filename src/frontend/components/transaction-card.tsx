@@ -114,7 +114,7 @@ export const TransactionCard = memo(function TransactionCard({
                 className="shadow-none"
               />
             )}
-            <StatusBadge status={transaction.status} />
+            <StatusBadge status={transaction.status} isInvoicable={transaction.is_invoicable} />
             {transaction.is_invoicable && (
               <span className="inline-flex items-center gap-1.5 text-xs font-medium text-primary">
                 <Receipt className="h-3.5 w-3.5" />
