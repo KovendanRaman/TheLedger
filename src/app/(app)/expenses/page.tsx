@@ -31,7 +31,7 @@ import {
 import Link from "next/link";
 import { cn } from "@/backend/lib/utils";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 
 function getCategoryIcon(name: string) {
   switch (name.toLowerCase()) {
@@ -70,7 +70,6 @@ export default function ExpensesPage() {
   const [categories, setCategories] = useState(MOCK_CATEGORIES);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [loadingMore, setLoadingMore] = useState(false);
 
   const [search, setSearch] = useState("");
   const [activeStatus, setActiveStatus] = useState<TransactionStatus | "all">("all");
@@ -78,8 +77,6 @@ export default function ExpensesPage() {
   const [activeBillability, setActiveBillability] = useState<BillabilityFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("date-desc");
   const [showFilters, setShowFilters] = useState(false);
-
-  const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Fetch transactions
   useEffect(() => {
@@ -152,9 +149,9 @@ export default function ExpensesPage() {
     });
   }, [filtered, sortBy]);
 
-  // Paginate (slice the sorted array)
-  const visibleTxns = useMemo(() => sorted.slice(0, page * PAGE_SIZE), [sorted, page]);
-  const hasMore = visibleTxns.length < sorted.length;
+  // Paginate
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const visibleTxns = useMemo(() => sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [sorted, page]);
 
   const totalFiltered = sorted.reduce((s, t) => s + t.amount, 0);
   const hasActiveFilters = activeStatus !== "all" || activeCategoryId !== "all" || activeBillability !== "all" || search.trim() !== "";
@@ -168,32 +165,6 @@ export default function ExpensesPage() {
       setAllTxns(txns);
     }
   }, []);
-
-  // Infinite scroll via IntersectionObserver
-  const handleLoadMore = useCallback(() => {
-    if (!hasMore || loadingMore) return;
-    setLoadingMore(true);
-    // Small artificial delay so the "loading more" spinner has time to render
-    setTimeout(() => {
-      setPage((p) => p + 1);
-      setLoadingMore(false);
-    }, 250);
-  }, [hasMore, loadingMore]);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) handleLoadMore();
-      },
-      { rootMargin: "200px" }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [handleLoadMore]);
 
   return (
     <PageTransition className="min-h-screen bg-background pb-32">
@@ -424,22 +395,31 @@ export default function ExpensesPage() {
               ))}
             </div>
 
-            {/* Infinite scroll sentinel */}
-            {hasMore && (
-              <div ref={sentinelRef} className="flex justify-center py-6">
-                {loadingMore ? (
-                  <div className="flex items-center gap-2 text-[13px] font-medium text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading more…
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleLoadMore}
-                    className="px-6 py-2.5 rounded-[1rem] text-[13px] font-semibold bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 text-muted-foreground shadow-sm hover:border-primary/30 hover:text-primary transition-all"
-                  >
-                    Load more ({sorted.length - visibleTxns.length} remaining)
-                  </button>
-                )}
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between py-6">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 rounded-xl text-[13px] font-bold bg-white dark:bg-[#1a1a2e] border border-border/50 disabled:opacity-50 transition-all shadow-sm disabled:cursor-not-allowed hover:-translate-x-0.5 active:translate-x-0 disabled:hover:translate-x-0"
+                >
+                  Previous
+                </button>
+                <div className="flex flex-col items-center">
+                  <span className="text-[13px] font-medium text-muted-foreground">
+                    Page <span className="font-bold text-foreground">{page}</span> of {totalPages}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/70 uppercase tracking-widest mt-0.5">
+                    {sorted.length} Total
+                  </span>
+                </div>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 rounded-xl text-[13px] font-bold bg-white dark:bg-[#1a1a2e] border border-border/50 disabled:opacity-50 transition-all shadow-sm disabled:cursor-not-allowed hover:translate-x-0.5 active:translate-x-0 disabled:hover:translate-x-0"
+                >
+                  Next
+                </button>
               </div>
             )}
           </>

@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/backend/lib/auth";
-import { getDashboardData } from "@/backend/actions/data";
+import { getDashboardData, getAllowanceDashboardData, getUserProfile } from "@/backend/actions/data";
 import { BottomNav } from "@/frontend/components/bottom-nav";
 import { LazyMoneyFlowChart, LazySpendingCategoryChart } from "@/frontend/components/dashboard-charts";
 import { PageTransition } from "@/frontend/components/page-transition";
+import { AllowanceDashboard } from "@/frontend/components/allowance-dashboard";
 import { formatCurrency } from "@/backend/lib/utils";
 import {
   IS_MOCK_MODE,
@@ -12,7 +13,7 @@ import {
   MOCK_CATEGORIES,
 } from "@/backend/lib/mock-data";
 import type { Transaction } from "@/backend/lib/types/database.types";
-import { Calendar, Plus, ArrowUpRight, Wallet, ArrowRight } from "lucide-react";
+import { Calendar, Plus, ArrowUpRight, Wallet, ArrowRight, Settings } from "lucide-react";
 import { CategoryBadge } from "@/frontend/components/category-badge";
 import { AnimatedCounter } from "@/frontend/components/animated-counter";
 import Link from "next/link";
@@ -23,6 +24,7 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   let fullName: string | null;
   let txns: Transaction[];
+  let appMode: "INVOICE" | "ALLOWANCE" = "INVOICE";
 
   if (IS_MOCK_MODE) {
     fullName = MOCK_PROFILE.full_name;
@@ -31,13 +33,67 @@ export default async function DashboardPage() {
     const session = await auth();
     if (!session?.user?.id) redirect("/login");
 
-    [txns] = await Promise.all([
+    const [profile, fetchedTxns] = await Promise.all([
+      getUserProfile(),
       getDashboardData(session.user.id),
     ]);
+
+    appMode = profile?.appMode ?? "INVOICE";
+    txns = fetchedTxns;
     fullName = session.user.name ?? null;
+
+    // Allowance mode: delegate to AllowanceDashboard
+    if (appMode === "ALLOWANCE") {
+      const allowanceData = await getAllowanceDashboardData(session.user.id);
+      const firstName = fullName?.split(" ")[0] ?? "Student";
+
+      return (
+        <PageTransition className="min-h-screen bg-[#F4F5FB] dark:bg-[#0f0f14] pb-32 md:pb-12 text-foreground transition-colors duration-300">
+          {/* Top Navigation Bar */}
+          <div className="flex flex-row items-center justify-between gap-3 px-4 sm:px-6 md:px-10 pt-10 pb-5">
+            <div className="min-w-0">
+              <h1 className="text-[22px] sm:text-[28px] md:text-[32px] font-bold tracking-tight truncate">Welcome back, {firstName}!</h1>
+              <p className="text-muted-foreground text-[13px] sm:text-[15px] mt-0.5 hidden sm:block">Your personal budget overview.</p>
+            </div>
+            <div className="flex items-center gap-3 self-end md:self-auto">
+              <Link
+                href="/settings"
+                className="flex items-center gap-3 bg-white dark:bg-[#1a1a2e] pl-2 pr-4 py-1.5 rounded-full border border-border/40 dark:border-white/10 shadow-sm hover:border-primary/40 hover:shadow-md transition-all"
+              >
+                <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: "rgba(99,102,241,0.12)", color: "#6366f1" }}>
+                  {firstName[0]}
+                </div>
+                <div className="hidden sm:block">
+                  <p className="text-sm font-bold leading-tight">{fullName ?? "Student"}</p>
+                </div>
+              </Link>
+            </div>
+          </div>
+
+          {/* Controls Toolbar */}
+          <div className="flex items-center justify-end gap-3 px-4 sm:px-6 md:px-10 mb-5">
+            <Link href="/add" className="flex items-center gap-2 px-5 py-2.5 text-white rounded-full text-sm font-semibold transition-all shadow-[0_4px_12px_rgba(99,102,241,0.3)] hover:opacity-90" style={{ backgroundColor: "#6366f1" }}>
+              <Plus className="w-4 h-4" />
+              <span>Add</span>
+            </Link>
+          </div>
+
+          <AllowanceDashboard data={allowanceData} firstName={firstName} />
+          
+          {/* Mobile Settings Link */}
+          <div className="lg:hidden px-4 sm:px-6 md:px-10 mt-8 mb-5 flex justify-center">
+             <Link href="/settings" className="px-6 py-3 bg-white/50 dark:bg-[#1a1a2e]/50 rounded-full text-[14px] font-bold border border-border/40 dark:border-white/10 text-muted-foreground flex items-center gap-2 hover:bg-white dark:hover:bg-[#1a1a2e] transition-colors shadow-sm">
+               <Settings className="w-4 h-4" />
+               App Settings
+             </Link>
+          </div>
+          <BottomNav className="lg:hidden" />
+        </PageTransition>
+      );
+    }
   }
 
-  // Calculate Metrics
+  // ─── INVOICE mode (existing UI unchanged) ────────────────────
   const totalSpend = txns.reduce((s, t) => s + t.amount, 0);
   const invoicableTotal = txns
     .filter((t) => t.is_invoicable && t.status !== "paid")
@@ -272,8 +328,15 @@ export default async function DashboardPage() {
 
       </div>
 
+      {/* Mobile Settings Link */}
+      <div className="lg:hidden px-4 sm:px-6 md:px-10 mt-8 mb-5 flex justify-center">
+         <Link href="/settings" className="px-6 py-3 bg-white/50 dark:bg-[#1a1a2e]/50 rounded-full text-[14px] font-bold border border-border/40 dark:border-white/10 text-muted-foreground flex items-center gap-2 hover:bg-white dark:hover:bg-[#1a1a2e] transition-colors shadow-sm">
+           <Settings className="w-4 h-4" />
+           App Settings
+         </Link>
+      </div>
+
       <BottomNav className="lg:hidden" />
     </PageTransition>
   );
 }
-

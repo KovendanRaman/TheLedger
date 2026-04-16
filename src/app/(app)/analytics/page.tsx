@@ -8,17 +8,20 @@ import {
 import { BottomNav } from "@/frontend/components/bottom-nav";
 import { PageTransition } from "@/frontend/components/page-transition";
 import { IS_MOCK_MODE, MOCK_TRANSACTIONS, MOCK_CATEGORIES } from "@/backend/lib/mock-data";
-import { getUserTransactions, getCategories } from "@/backend/actions/data";
-import type { Transaction, Category } from "@/backend/lib/types/database.types";
+import { getUserTransactions, getCategories, getUserIncomes } from "@/backend/actions/data";
+import { getRecurringExpenses } from "@/backend/actions/allowance";
+import type { Transaction, Category, Income, RecurringExpense } from "@/backend/lib/types/database.types";
 import { formatCurrency } from "@/backend/lib/utils";
 import {
   ChevronLeft, TrendingUp, ShoppingBag,
   ReceiptText, Clock, FileCheck, CheckCircle2, ArrowUpRight,
+  Calculator, AlertCircle, Wallet, ArrowDownCircle, ArrowUpCircle, ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/backend/lib/utils";
 import { TransactionListSkeleton } from "@/frontend/components/transaction-card-skeleton";
-import { format, subMonths, startOfMonth, parseISO, isAfter, isSameMonth } from "date-fns";
+import { format, subMonths, startOfMonth, parseISO, isAfter, isSameMonth, differenceInDays } from "date-fns";
+import { useAppMode } from "@/frontend/components/app-mode-provider";
 
 type Period = "month" | "quarter" | "all";
 
@@ -70,7 +73,10 @@ function SkeletonCard({ className }: { className?: string }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AnalyticsPage() {
+  const { appMode } = useAppMode();
   const [allTxns, setAllTxns] = useState<Transaction[]>([]);
+  const [allIncomes, setAllIncomes] = useState<any[]>([]);
+  const [allDebits, setAllDebits] = useState<RecurringExpense[]>([]);
   const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>("month");
@@ -84,17 +90,27 @@ export default function AnalyticsPage() {
         if (!cancelled) {
           setAllTxns(MOCK_TRANSACTIONS);
           setCategories(MOCK_CATEGORIES);
+          setAllIncomes([
+             { id: "inc1", amount: 2500, source: "Allowance", date: new Date().toISOString(), is_recurring: true }
+          ]);
+          setAllDebits([
+             { id: "deb1", user_id: "mock", name: "Spotify", amount: 60, billing_date: 10, is_active: true, created_at: new Date().toISOString() }
+          ]);
           setLoading(false);
         }
         return;
       }
-      const [txns, cats] = await Promise.all([
+      const [txns, cats, incomes, debits] = await Promise.all([
         getUserTransactions(),
         getCategories(),
+        getUserIncomes(),
+        getRecurringExpenses(),
       ]);
       if (!cancelled) {
         setAllTxns(txns);
         setCategories(cats);
+        setAllIncomes(incomes);
+        setAllDebits(debits);
         setLoading(false);
       }
     }
@@ -103,69 +119,148 @@ export default function AnalyticsPage() {
   }, []);
 
   // ─── Period filter ──────────────────────────────────────────────────────────
-  const filtered = useMemo(() => {
+  const filteredTxns = useMemo(() => {
     const now = new Date();
     if (period === "month") {
-      return allTxns.filter((t) => isSameMonth(parseISO(t.date), now));
+      return allTxns.filter((t) => isSameMonth(parseISO(t.date || t.created_at), now));
     }
     if (period === "quarter") {
       const cutoff = startOfMonth(subMonths(now, 2));
-      return allTxns.filter((t) => isAfter(parseISO(t.date), cutoff) || isSameMonth(parseISO(t.date), cutoff));
+      return allTxns.filter((t) => isAfter(parseISO(t.date || t.created_at), cutoff) || isSameMonth(parseISO(t.date || t.created_at), cutoff));
     }
     return allTxns;
   }, [allTxns, period]);
 
+  const filteredIncomes = useMemo(() => {
+    const now = new Date();
+    return allIncomes.filter(i => {
+       if (i.is_recurring) return true;
+       const dateStr = i.date || new Date().toISOString();
+       if (period === "month") return isSameMonth(parseISO(dateStr), now);
+       if (period === "quarter") {
+         const cutoff = startOfMonth(subMonths(now, 2));
+         return isAfter(parseISO(dateStr), cutoff) || isSameMonth(parseISO(dateStr), cutoff);
+       }
+       return true;
+    });
+  }, [allIncomes, period]);
+
   // ─── KPIs ───────────────────────────────────────────────────────────────────
   const kpis = useMemo(() => {
-    let total = 0, billable = 0, personal = 0;
-    for (const t of filtered) {
-      total += t.amount;
+    let totalSpend = 0, billable = 0, personal = 0;
+    for (const t of filteredTxns) {
+      totalSpend += t.amount;
       if (t.is_invoicable) billable += t.amount;
       else personal += t.amount;
     }
-    return { total, billable, personal, billablePct: total > 0 ? Math.round((billable / total) * 100) : 0 };
-  }, [filtered]);
-  const { total: totalSpend, billable: billableTotal, personal: personalTotal, billablePct } = kpis;
+
+    let totalFixedSpend = 0;
+    const activeDebits = allDebits.filter(d => d.is_active);
+    for (const d of activeDebits) {
+       if (period === "month") totalFixedSpend += d.amount;
+       if (period === "quarter") totalFixedSpend += d.amount * 3;
+       if (period === "all") totalFixedSpend += d.amount * 6; // Rough estimate
+    }
+    
+    const trueTotalSpend = totalSpend + totalFixedSpend;
+
+    let totalIncome = 0;
+    // Calculate total income, multiplying recurring by months if needed
+    for (const inc of filteredIncomes) {
+       if (inc.is_recurring) {
+          if (period === "month") totalIncome += inc.amount;
+          if (period === "quarter") totalIncome += inc.amount * 3;
+          if (period === "all") totalIncome += inc.amount * 6; // Rough estimate
+       } else {
+          totalIncome += inc.amount;
+       }
+    }
+
+    // Days in selected period
+    const now = new Date();
+    let daysCount = 30;
+    if (period === "quarter") daysCount = 90;
+    if (period === "all" && filteredTxns.length > 0) {
+       const oldest = filteredTxns.reduce((earliest, t) => {
+         const d = parseISO(t.date || t.created_at);
+         return isAfter(earliest, d) ? d : earliest;
+       }, new Date());
+       daysCount = Math.max(1, differenceInDays(now, oldest) + 1);
+    }
+
+    return { 
+      totalSpend: trueTotalSpend, 
+      variableSpend: totalSpend,
+      fixedSpend: totalFixedSpend,
+      billableTotal: billable, 
+      personalTotal: personal, 
+      billablePct: trueTotalSpend > 0 ? Math.round((billable / trueTotalSpend) * 100) : 0,
+      dailyAvg: daysCount > 0 ? trueTotalSpend / daysCount : 0,
+      totalIncome,
+      netCashflow: totalIncome - trueTotalSpend
+    };
+  }, [filteredTxns, filteredIncomes, allDebits, period]);
+
+  const { totalSpend, variableSpend, fixedSpend, billableTotal, personalTotal, billablePct, dailyAvg, totalIncome, netCashflow } = kpis;
 
   // ─── Monthly trend ──────────────────────────────────────────────────────────
   const monthlyData = useMemo(() => {
-    const buckets: Record<string, { label: string; personal: number; billable: number }> = {};
-    filtered.forEach((t) => {
-      const key = t.date.substring(0, 7); // YYYY-MM
+    const buckets: Record<string, { label: string; personal: number; billable: number; totalSpend: number; totalIncome: number }> = {};
+    
+    // Transactions
+    filteredTxns.forEach((t) => {
+      const dateStr = t.date || t.created_at;
+      const key = dateStr.substring(0, 7); // YYYY-MM
       if (!buckets[key]) {
-        buckets[key] = {
-          label: format(parseISO(t.date), "MMM yy"),
-          personal: 0,
-          billable: 0,
-        };
+        buckets[key] = { label: format(parseISO(dateStr), "MMM yy"), personal: 0, billable: 0, totalSpend: 0, totalIncome: 0 };
       }
+      buckets[key].totalSpend += t.amount;
       if (t.is_invoicable) buckets[key].billable += t.amount;
       else buckets[key].personal += t.amount;
     });
+
+    // Incomes
+    filteredIncomes.forEach((i) => {
+      if (i.is_recurring) return; // Ignore recurring in the bar chart individual buckets for now to avoid complexity
+      const dateStr = i.date || new Date().toISOString();
+      const key = dateStr.substring(0, 7);
+      if (!buckets[key]) {
+         buckets[key] = { label: format(parseISO(dateStr), "MMM yy"), personal: 0, billable: 0, totalSpend: 0, totalIncome: 0 };
+      }
+      buckets[key].totalIncome += i.amount;
+    });
+
+    // Add recurring base to all buckets
+    const recIncomeSum = filteredIncomes.filter(i => i.is_recurring).reduce((s, i) => s + i.amount, 0);
+    const recDebitSum = allDebits.filter(d => d.is_active).reduce((s, d) => s + d.amount, 0);
+    
+    Object.values(buckets).forEach(b => { 
+      b.totalIncome += recIncomeSum; 
+      b.totalSpend += recDebitSum;
+    });
+
     return Object.entries(buckets)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([, v]) => v);
-  }, [filtered]);
+  }, [filteredTxns, filteredIncomes, allDebits]);
 
   // ─── Category breakdown ─────────────────────────────────────────────────────
   const categoryData = useMemo(() => {
     const totals: Record<string, { amount: number; name: string; color: string }> = {};
-    filtered.forEach((t) => {
+    filteredTxns.forEach((t) => {
       if (!t.category_id) return;
       const cat = getCategoryById(categories, t.category_id);
       if (!totals[t.category_id]) {
-        totals[t.category_id] = { amount: 0, name: cat?.name ?? "Other", color: cat?.color ?? "#6b7280" };
+        totals[t.category_id] = { amount: 0, name: cat?.name ?? "Other", color: cat?.color ?? "#10b981" };
       }
       totals[t.category_id].amount += t.amount;
     });
     return Object.values(totals).sort((a, b) => b.amount - a.amount).slice(0, 6);
-  }, [filtered, categories]);
+  }, [filteredTxns, categories]);
 
   // ─── Status breakdown (billable transactions only) ──────────────────────────
-  // Personal items are auto-set to 'paid' to skip the invoice queue,
-  // so we must exclude them from the billable status buckets to avoid confusion.
   const statusData = useMemo(() => {
-    const billable = filtered.filter((t) => t.is_invoicable);
+    const billable = filteredTxns.filter((t) => t.is_invoicable);
     const pending  = billable.filter((t) => t.status === "pending").reduce((s, t) => s + t.amount, 0);
     const invoiced = billable.filter((t) => t.status === "invoiced").reduce((s, t) => s + t.amount, 0);
     const settled  = billable.filter((t) => t.status === "paid").reduce((s, t) => s + t.amount, 0);
@@ -173,15 +268,17 @@ export default function AnalyticsPage() {
     const invoicedCount = billable.filter((t) => t.status === "invoiced").length;
     const settledCount  = billable.filter((t) => t.status === "paid").length;
     return { pending, invoiced, settled, pendingCount, invoicedCount, settledCount };
-  }, [filtered]);
+  }, [filteredTxns]);
 
   // ─── Top transactions ───────────────────────────────────────────────────────
   const topTxns = useMemo(
-    () => [...filtered].sort((a, b) => b.amount - a.amount).slice(0, 5),
-    [filtered]
+    () => [...filteredTxns].sort((a, b) => b.amount - a.amount).slice(0, 5),
+    [filteredTxns]
   );
 
-  const isEmpty = !loading && filtered.length === 0;
+  const isEmpty = !loading && filteredTxns.length === 0 && appMode === "INVOICE";
+  // For allowance mode, we might have incomes and debits but no transactions
+  const isAllowanceEmpty = !loading && filteredTxns.length === 0 && allIncomes.length === 0 && allDebits.length === 0;
 
   return (
     <PageTransition className="min-h-screen bg-background pb-36 lg:pb-16">
@@ -196,12 +293,12 @@ export default function AnalyticsPage() {
           </Link>
           <div className="flex-1">
             <h1 className="text-[28px] leading-none font-bold text-foreground tracking-tight">
-              Analytics
+              {appMode === "ALLOWANCE" ? "Spending Insights" : "Analytics"}
             </h1>
             <p className="text-[13px] font-medium text-muted-foreground mt-1">
               {loading
                 ? <span className="inline-block h-3 w-28 rounded bg-border/40 animate-pulse" />
-                : `${filtered.length} transactions`}
+                : `${filteredTxns.length} transactions`}
             </p>
           </div>
         </div>
@@ -237,7 +334,7 @@ export default function AnalyticsPage() {
           <SkeletonCard className="h-56" />
           <TransactionListSkeleton count={5} />
         </div>
-      ) : isEmpty ? (
+      ) : (appMode === "INVOICE" ? isEmpty : isAllowanceEmpty) ? (
         <div className="px-5 flex flex-col items-center justify-center py-24 text-center">
           <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center mb-5">
             <TrendingUp className="h-9 w-9 text-primary/30" />
@@ -250,69 +347,139 @@ export default function AnalyticsPage() {
       ) : (
         <div className="px-4 sm:px-5 space-y-4">
 
-          {/* ── KPI cards ── */}
+          {/* ── KPI cards (Dynamic based on Mode) ── */}
           <div className="grid grid-cols-2 gap-3">
-            {/* Total Spend */}
-            <div className="col-span-2 p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
+            
+            {/* Total Spend - Full width across both modes */}
+            <div className={cn(
+               "p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm",
+               appMode === "INVOICE" ? "col-span-2" : "col-span-1"
+            )}>
               <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
                 Total Spend
               </p>
-              <p className="text-[32px] font-bold text-foreground leading-none tracking-tight">
+              <p className={cn("font-bold text-foreground leading-none tracking-tight", appMode === "INVOICE" ? "text-[32px]" : "text-[22px]")}>
                 {formatCurrency(totalSpend)}
               </p>
-              <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{
-                    width: `${billablePct}%`,
-                    background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
-                  }}
-                />
-              </div>
-              <div className="flex justify-between mt-1.5">
-                <span className="text-[11px] font-medium text-muted-foreground">{billablePct}% billable</span>
-                <span className="text-[11px] font-medium text-muted-foreground">{100 - billablePct}% personal</span>
-              </div>
+
+              {appMode === "INVOICE" && (
+                <>
+                  <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${billablePct}%`,
+                        background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-1.5">
+                    <span className="text-[11px] font-medium text-muted-foreground">{billablePct}% billable</span>
+                    <span className="text-[11px] font-medium text-muted-foreground">{100 - billablePct}% personal</span>
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* Billable */}
-            <div className="p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Billable</p>
-                <div className="w-8 h-8 rounded-full bg-violet-50 dark:bg-violet-500/20 flex items-center justify-center">
-                  <ReceiptText className="h-4 w-4 text-violet-500 dark:text-violet-400" />
+            {appMode === "INVOICE" ? (
+              <>
+                {/* Billable */}
+                <div className="p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Billable</p>
+                    <div className="w-8 h-8 rounded-full bg-violet-50 dark:bg-violet-500/20 flex items-center justify-center">
+                      <ReceiptText className="h-4 w-4 text-violet-500 dark:text-violet-400" />
+                    </div>
+                  </div>
+                  <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(billableTotal)}</p>
+                  <p className="text-[12px] font-medium text-muted-foreground mt-1">
+                    {filteredTxns.filter((t) => t.is_invoicable).length} txns
+                  </p>
                 </div>
-              </div>
-              <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(billableTotal)}</p>
-              <p className="text-[12px] font-medium text-muted-foreground mt-1">
-                {filtered.filter((t) => t.is_invoicable).length} txns
-              </p>
-            </div>
 
-            {/* Personal */}
-            <div className="p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Personal</p>
-                <div className="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-500/20 flex items-center justify-center">
-                  <ShoppingBag className="h-4 w-4 text-pink-500 dark:text-pink-400" />
+                {/* Personal */}
+                <div className="p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Personal</p>
+                    <div className="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-500/20 flex items-center justify-center">
+                      <ShoppingBag className="h-4 w-4 text-pink-500 dark:text-pink-400" />
+                    </div>
+                  </div>
+                  <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(personalTotal)}</p>
+                  <p className="text-[12px] font-medium text-muted-foreground mt-1">
+                    {filteredTxns.filter((t) => !t.is_invoicable).length} txns
+                  </p>
                 </div>
-              </div>
-              <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(personalTotal)}</p>
-              <p className="text-[12px] font-medium text-muted-foreground mt-1">
-                {filtered.filter((t) => !t.is_invoicable).length} txns
-              </p>
-            </div>
+              </>
+            ) : (
+               <>
+                {/* Net Cashflow (Allowance only) */}
+                <div className="p-4 rounded-[1.5rem] bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 shadow-sm flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Net Cashflow</p>
+                    <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
+                      <Wallet className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                  </div>
+                  <p className="text-[22px] font-bold text-foreground leading-none">{formatCurrency(netCashflow)}</p>
+                </div>
+
+                {/* Total Income */}
+                <div className="p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Income</p>
+                    <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-500/20 flex items-center justify-center">
+                      <ArrowUpCircle className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                    </div>
+                  </div>
+                  <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(totalIncome)}</p>
+                  <p className="text-[12px] font-medium text-muted-foreground mt-1">
+                    Logged in period
+                  </p>
+                </div>
+
+                {/* Fixed Costs */}
+                <div className="p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Fixed Costs</p>
+                    <div className="w-8 h-8 rounded-full bg-violet-50 dark:bg-violet-500/20 flex items-center justify-center">
+                      <ShieldCheck className="h-4 w-4 text-violet-500 dark:text-violet-400" />
+                    </div>
+                  </div>
+                  <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(fixedSpend)}</p>
+                  <p className="text-[12px] font-medium text-muted-foreground mt-1">
+                    Debit orders
+                  </p>
+                </div>
+
+                {/* Daily Average */}
+                <div className="p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Daily Avg</p>
+                    <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-500/20 flex items-center justify-center">
+                      <Calculator className="h-4 w-4 text-orange-500 dark:text-orange-400" />
+                    </div>
+                  </div>
+                  <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(dailyAvg)}</p>
+                  <p className="text-[12px] font-medium text-muted-foreground mt-1">
+                    spent per day
+                  </p>
+                </div>
+               </>
+            )}
           </div>
 
           {/* ── Spending Trend ── */}
           {monthlyData.length > 0 && (
             <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-[15px] font-bold text-foreground">Spending Trend</p>
+                <p className="text-[15px] font-bold text-foreground">
+                   {appMode === "INVOICE" ? "Spending Trend" : "Income vs Expense"}
+                </p>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </div>
               <p className="text-[12px] font-medium text-muted-foreground mb-4">
-                Personal vs billable by month
+                {appMode === "INVOICE" ? "Personal vs billable by month" : "Monthly cashflow comparison"}
               </p>
               <div className="h-[200px] sm:h-[220px] w-full overflow-hidden">
                 <ResponsiveContainer width="100%" height="100%">
@@ -333,21 +500,45 @@ export default function AnalyticsPage() {
                       width={44}
                     />
                     <Tooltip content={<BarTooltip />} cursor={{ fill: "#F8FAFC", radius: 8 }} />
-                    <Bar dataKey="personal" name="Personal" fill="#8B5CF6" radius={[4, 4, 4, 4]} barSize={12} />
-                    <Bar dataKey="billable" name="Billable" fill="#C4B5FD" radius={[4, 4, 4, 4]} barSize={12} />
+                    {appMode === "INVOICE" ? (
+                      <>
+                        <Bar dataKey="personal" name="Personal" fill="#8B5CF6" radius={[4, 4, 4, 4]} barSize={12} />
+                        <Bar dataKey="billable" name="Billable" fill="#C4B5FD" radius={[4, 4, 4, 4]} barSize={12} />
+                      </>
+                    ) : (
+                      <>
+                        <Bar dataKey="totalIncome" name="Income" fill="#10B981" radius={[4, 4, 4, 4]} barSize={12} />
+                        <Bar dataKey="totalSpend" name="Spend" fill="#EF4444" radius={[4, 4, 4, 4]} barSize={12} />
+                      </>
+                    )}
                   </BarChart>
                 </ResponsiveContainer>
               </div>
               {/* Legend */}
               <div className="flex justify-center gap-6 mt-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
-                  <span className="text-[11px] font-semibold text-muted-foreground">Personal</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-[#C4B5FD]" />
-                  <span className="text-[11px] font-semibold text-muted-foreground">Billable</span>
-                </div>
+                {appMode === "INVOICE" ? (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
+                      <span className="text-[11px] font-semibold text-muted-foreground">Personal</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#C4B5FD]" />
+                      <span className="text-[11px] font-semibold text-muted-foreground">Billable</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#10B981]" />
+                      <span className="text-[11px] font-semibold text-muted-foreground">Income</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#EF4444]" />
+                      <span className="text-[11px] font-semibold text-muted-foreground">Spend</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -418,59 +609,61 @@ export default function AnalyticsPage() {
             </div>
           )}
 
-          {/* ── Status Overview ── */}
-          <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
-            <p className="text-[15px] font-bold text-foreground mb-0.5">Status Overview</p>
-            <p className="text-[12px] font-medium text-muted-foreground mb-4">
-              Billable transactions only
-            </p>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              {[
-                {
-                  label: "Pending",
-                  sublabel: "awaiting invoice",
-                  amount: statusData.pending,
-                  count: statusData.pendingCount,
-                  icon: Clock,
-                  bg: "bg-amber-50 dark:bg-amber-500/20",
-                  text: "text-amber-600 dark:text-amber-400",
-                },
-                {
-                  label: "Invoiced",
-                  sublabel: "on open invoice",
-                  amount: statusData.invoiced,
-                  count: statusData.invoicedCount,
-                  icon: FileCheck,
-                  bg: "bg-indigo-50 dark:bg-indigo-500/20",
-                  text: "text-indigo-600 dark:text-indigo-400",
-                },
-                {
-                  label: "Settled",
-                  sublabel: "paid by parent",
-                  amount: statusData.settled,
-                  count: statusData.settledCount,
-                  icon: CheckCircle2,
-                  bg: "bg-emerald-50 dark:bg-emerald-500/20",
-                  text: "text-emerald-600 dark:text-emerald-400",
-                },
-              ].map(({ label, sublabel, amount, count, icon: Icon, bg, text }) => (
-                <div key={label} className={cn("rounded-[1.25rem] p-3 sm:p-3.5", bg)}>
-                  <div className="w-7 h-7 rounded-full bg-white dark:bg-[#1a1a2e] flex items-center justify-center mb-2 shadow-sm">
-                    <Icon className={cn("h-3.5 w-3.5", text)} />
+          {/* ── Status Overview (Invoice Mode Only) ── */}
+          {appMode === "INVOICE" && (
+            <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
+              <p className="text-[15px] font-bold text-foreground mb-0.5">Status Overview</p>
+              <p className="text-[12px] font-medium text-muted-foreground mb-4">
+                Billable transactions only
+              </p>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                {[
+                  {
+                    label: "Pending",
+                    sublabel: "awaiting invoice",
+                    amount: statusData.pending,
+                    count: statusData.pendingCount,
+                    icon: Clock,
+                    bg: "bg-amber-50 dark:bg-amber-500/20",
+                    text: "text-amber-600 dark:text-amber-400",
+                  },
+                  {
+                    label: "Invoiced",
+                    sublabel: "on open invoice",
+                    amount: statusData.invoiced,
+                    count: statusData.invoicedCount,
+                    icon: FileCheck,
+                    bg: "bg-indigo-50 dark:bg-indigo-500/20",
+                    text: "text-indigo-600 dark:text-indigo-400",
+                  },
+                  {
+                    label: "Settled",
+                    sublabel: "paid by parent",
+                    amount: statusData.settled,
+                    count: statusData.settledCount,
+                    icon: CheckCircle2,
+                    bg: "bg-emerald-50 dark:bg-emerald-500/20",
+                    text: "text-emerald-600 dark:text-emerald-400",
+                  },
+                ].map(({ label, sublabel, amount, count, icon: Icon, bg, text }) => (
+                  <div key={label} className={cn("rounded-[1.25rem] p-3 sm:p-3.5", bg)}>
+                    <div className="w-7 h-7 rounded-full bg-white dark:bg-[#1a1a2e] flex items-center justify-center mb-2 shadow-sm">
+                      <Icon className={cn("h-3.5 w-3.5", text)} />
+                    </div>
+                    <p className={cn("text-[10px] sm:text-[11px] font-bold uppercase tracking-wider leading-none mb-1.5", text)}>
+                      {label}
+                    </p>
+                    <p className="text-[13px] sm:text-[15px] font-bold text-foreground leading-none">
+                      {formatCurrency(amount)}
+                    </p>
+                    <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground mt-1">
+                      {count} txn{count !== 1 ? "s" : ""}
+                    </p>
                   </div>
-                  <p className={cn("text-[10px] sm:text-[11px] font-bold uppercase tracking-wider leading-none mb-1.5", text)}>
-                    {label}
-                  </p>
-                  <p className="text-[13px] sm:text-[15px] font-bold text-foreground leading-none">
-                    {formatCurrency(amount)}
-                  </p>
-                  <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground mt-1">
-                    {count} txn{count !== 1 ? "s" : ""}
-                  </p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* ── Top Transactions ── */}
           {topTxns.length > 0 && (
@@ -503,11 +696,11 @@ export default function AnalyticsPage() {
                       {/* Color dot */}
                       <div
                         className="w-8 h-8 rounded-[0.75rem] flex-shrink-0 flex items-center justify-center"
-                        style={{ backgroundColor: `${cat?.color ?? "#6366f1"}18` }}
+                        style={{ backgroundColor: `${cat?.color ?? "#10b981"}18` }}
                       >
                         <div
                           className="w-2.5 h-2.5 rounded-full"
-                          style={{ backgroundColor: cat?.color ?? "#6366f1" }}
+                          style={{ backgroundColor: cat?.color ?? "#10b981" }}
                         />
                       </div>
 
@@ -517,22 +710,24 @@ export default function AnalyticsPage() {
                           <p className="text-[13px] font-semibold text-foreground truncate leading-none">
                             {txn.description}
                           </p>
-                          {/* Personal / Billable pill */}
-                          <span
-                            className={cn(
-                              "inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide flex-shrink-0",
-                              txn.is_invoicable
-                                ? "bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400"
-                                : "bg-muted/60 text-muted-foreground"
-                            )}
-                          >
-                            {txn.is_invoicable ? "Billable" : "Personal"}
-                          </span>
+                          {/* Personal / Billable pill - INVOICE MODE ONLY */}
+                          {appMode === "INVOICE" && (
+                            <span
+                              className={cn(
+                                "inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide flex-shrink-0",
+                                txn.is_invoicable
+                                  ? "bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400"
+                                  : "bg-muted/60 text-muted-foreground"
+                              )}
+                            >
+                              {txn.is_invoicable ? "Billable" : "Personal"}
+                            </span>
+                          )}
                         </div>
                         <div className="h-1 rounded-full bg-muted overflow-hidden">
                           <div
                             className="h-full rounded-full"
-                            style={{ width: `${pct}%`, backgroundColor: cat?.color ?? "#6366f1" }}
+                            style={{ width: `${pct}%`, backgroundColor: cat?.color ?? "#10b981" }}
                           />
                         </div>
                       </div>

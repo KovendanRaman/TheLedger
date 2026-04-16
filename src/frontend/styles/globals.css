@@ -180,3 +180,15 @@
   0%, 100% { opacity: 0.3; transform: translateY(0); }
   50% { opacity: 1; transform: translateY(-3px); }
 }
+
+/* Fix browser autofill styling for dark mode inputs */
+@layer utilities {
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover, 
+  .dark input:-webkit-autofill:focus, 
+  .dark input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 30px #1a1a2e inset !important;
+      -webkit-text-fill-color: #f8fafc !important;
+      transition: background-color 5000s ease-in-out 0s;
+  }
+}

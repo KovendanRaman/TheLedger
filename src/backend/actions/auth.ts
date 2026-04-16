@@ -9,7 +9,8 @@ import { revalidatePath } from "next/cache";
 export async function registerUser(
   fullName: string,
   email: string,
-  password: string
+  password: string,
+  appMode: "INVOICE" | "ALLOWANCE" = "INVOICE"
 ): Promise<{ error: string | null }> {
   if (!fullName.trim() || !email.trim() || password.length < 8) {
     return { error: "Please fill in all fields. Password must be at least 8 characters." };
@@ -31,6 +32,7 @@ export async function registerUser(
     email: email.toLowerCase().trim(),
     passwordHash,
     fullName: fullName.trim(),
+    appMode,
   });
 
   return { error: null };

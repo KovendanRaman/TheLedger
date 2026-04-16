@@ -355,10 +355,9 @@ export default function NewInvoicePage() {
         </>
       )}
 
-      {/* Action bar — fixed above the BottomNav on mobile, at bottom on desktop.
-           The BottomNav pill is ~5rem tall (pill + mb-6 gap), so we offset by that. */}
+      {/* Action bar — fixed above the BottomNav on mobile, at bottom on desktop. */}
       {txns.length > 0 && (
-        <div className="fixed bottom-[5rem] lg:bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#1a1a2e]/95 backdrop-blur-md border-t border-border/30 px-5 py-4 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+        <div className="fixed bottom-[6rem] sm:bottom-[6.5rem] lg:bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#1a1a2e]/95 backdrop-blur-md border-t border-border/30 px-5 py-4 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-between gap-4">
             {/* Summary */}
             <div className="flex items-center gap-3">
