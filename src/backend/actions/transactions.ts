@@ -27,6 +27,9 @@ export async function addTransaction(formData: FormData) {
   if (isNaN(amount) || amount <= 0) throw new Error("Invalid amount.");
   if (!description) throw new Error("Description is required.");
 
+  // Non-billable items skip the invoice queue entirely — mark them paid immediately.
+  const status = isInvoicable ? "pending" : "paid";
+
   await db.insert(transactions).values({
     userId,
     amount: String(amount),
@@ -34,7 +37,7 @@ export async function addTransaction(formData: FormData) {
     categoryId,
     isInvoicable,
     date,
-    status: "pending",
+    status,
   });
 
   revalidatePath("/dashboard");
@@ -54,9 +57,29 @@ export async function updateTransaction(id: string, formData: FormData) {
   if (isNaN(amount) || amount <= 0) throw new Error("Invalid amount.");
   if (!description) throw new Error("Description is required.");
 
+  // Recalculate status when invoicability changes:
+  // - Toggled OFF → force "paid" (remove from invoice queue)
+  // - Toggled ON  → if it was sitting as "paid" from personal, reset to "pending"
+  // Fetch current record first so we can make the right decision.
+  const [current] = await db
+    .select({ status: transactions.status, isInvoicable: transactions.isInvoicable })
+    .from(transactions)
+    .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
+    .limit(1);
+
+  if (!current) throw new Error("Transaction not found or not authorised.");
+
+  let newStatus: "pending" | "invoiced" | "paid" = current.status;
+  if (!isInvoicable) {
+    newStatus = "paid"; // personal — exits invoice queue
+  } else if (isInvoicable && !current.isInvoicable) {
+    // Was personal, now billable — reset to pending
+    newStatus = "pending";
+  }
+
   const updated = await db
     .update(transactions)
-    .set({ amount: String(amount), description, categoryId, isInvoicable, date })
+    .set({ amount: String(amount), description, categoryId, isInvoicable, date, status: newStatus })
     .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
     .returning({ id: transactions.id });
 

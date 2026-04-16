@@ -55,6 +55,14 @@ const STATUS_TABS: { label: string; value: TransactionStatus | "all" }[] = [
   { label: "Paid", value: "paid" },
 ];
 
+type BillabilityFilter = "all" | "billable" | "personal";
+
+const BILLABILITY_TABS: { label: string; value: BillabilityFilter }[] = [
+  { label: "All", value: "all" },
+  { label: "Billable", value: "billable" },
+  { label: "Personal", value: "personal" },
+];
+
 type SortOption = "date-desc" | "date-asc" | "amount-desc" | "amount-asc";
 
 export default function ExpensesPage() {
@@ -67,6 +75,7 @@ export default function ExpensesPage() {
   const [search, setSearch] = useState("");
   const [activeStatus, setActiveStatus] = useState<TransactionStatus | "all">("all");
   const [activeCategoryId, setActiveCategoryId] = useState<string | "all">("all");
+  const [activeBillability, setActiveBillability] = useState<BillabilityFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("date-desc");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -109,7 +118,7 @@ export default function ExpensesPage() {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [search, activeStatus, activeCategoryId, sortBy]);
+  }, [search, activeStatus, activeCategoryId, activeBillability, sortBy]);
 
   // Filter
   const filtered = useMemo(() => {
@@ -118,11 +127,19 @@ export default function ExpensesPage() {
         search.trim() === "" ||
         t.description.toLowerCase().includes(search.trim().toLowerCase()) ||
         t.categories?.name.toLowerCase().includes(search.trim().toLowerCase());
-      const matchesStatus = activeStatus === "all" || t.status === activeStatus;
+      const matchesStatus =
+        activeStatus === "all" ||
+        // Status filter only applies to billable items; personal always pass through
+        !t.is_invoicable ||
+        t.status === activeStatus;
       const matchesCategory = activeCategoryId === "all" || t.category_id === activeCategoryId;
-      return matchesSearch && matchesStatus && matchesCategory;
+      const matchesBillability =
+        activeBillability === "all" ||
+        (activeBillability === "billable" && t.is_invoicable) ||
+        (activeBillability === "personal" && !t.is_invoicable);
+      return matchesSearch && matchesStatus && matchesCategory && matchesBillability;
     });
-  }, [allTxns, search, activeStatus, activeCategoryId]);
+  }, [allTxns, search, activeStatus, activeCategoryId, activeBillability]);
 
   // Sort
   const sorted = useMemo(() => {
@@ -140,7 +157,7 @@ export default function ExpensesPage() {
   const hasMore = visibleTxns.length < sorted.length;
 
   const totalFiltered = sorted.reduce((s, t) => s + t.amount, 0);
-  const hasActiveFilters = activeStatus !== "all" || activeCategoryId !== "all" || search.trim() !== "";
+  const hasActiveFilters = activeStatus !== "all" || activeCategoryId !== "all" || activeBillability !== "all" || search.trim() !== "";
 
   const handleDelete = useCallback(async (id: string) => {
     setAllTxns((prev) => prev.filter((t) => t.id !== id));
@@ -319,16 +336,17 @@ export default function ExpensesPage() {
         )}
       </div>
 
-      {/* Status Tabs */}
-      <div className="flex gap-2 px-5 mb-5 overflow-x-auto no-scrollbar pb-1">
-        {STATUS_TABS.map((tab) => (
+      {/* Billability Toggle */}
+      <div className="flex gap-2 px-5 mb-3 overflow-x-auto no-scrollbar pb-1">
+        <p className="sr-only">Filter by type</p>
+        {BILLABILITY_TABS.map((tab) => (
           <button
             key={tab.value}
-            onClick={() => setActiveStatus(tab.value)}
+            onClick={() => setActiveBillability(tab.value)}
             className={cn(
               "px-5 py-2.5 rounded-[1rem] text-[13px] font-semibold whitespace-nowrap transition-all border",
-              activeStatus === tab.value
-                ? "gradient-primary text-white border-transparent glow-primary shadow-lg"
+              activeBillability === tab.value
+                ? "bg-foreground text-background border-foreground shadow-md shadow-foreground/10"
                 : "bg-white dark:bg-[#1a1a2e] text-muted-foreground border border-border/50 dark:border-white/10 hover:border-primary/30 shadow-sm shadow-black/5"
             )}
           >
@@ -336,6 +354,26 @@ export default function ExpensesPage() {
           </button>
         ))}
       </div>
+
+      {/* Status Tabs — only shown when billability is not "personal" */}
+      {activeBillability !== "personal" && (
+        <div className="flex gap-2 px-5 mb-5 overflow-x-auto no-scrollbar pb-1">
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveStatus(tab.value)}
+              className={cn(
+                "px-5 py-2.5 rounded-[1rem] text-[13px] font-semibold whitespace-nowrap transition-all border",
+                activeStatus === tab.value
+                  ? "gradient-primary text-white border-transparent glow-primary shadow-lg"
+                  : "bg-white dark:bg-[#1a1a2e] text-muted-foreground border border-border/50 dark:border-white/10 hover:border-primary/30 shadow-sm shadow-black/5"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Results summary */}
       {!loading && (
@@ -369,6 +407,7 @@ export default function ExpensesPage() {
                   setSearch("");
                   setActiveStatus("all");
                   setActiveCategoryId("all");
+                  setActiveBillability("all");
                   setSortBy("date-desc");
                 }}
                 className="mt-4 text-[13px] font-bold text-primary hover:underline"
