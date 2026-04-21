@@ -131,10 +131,9 @@ export const TransactionCard = memo(function TransactionCard({
           <span className="text-xs font-medium text-muted-foreground">
             {formatDate(transaction.date)}
           </span>
-          {/* Desktop-only edit button */}
           <Link
             href={`/expenses/${transaction.id}/edit`}
-            className="mt-0.5 hidden md:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border border-border/60 dark:border-white/10 text-muted-foreground bg-white dark:bg-[#1a1a2e] shadow-sm hover:border-primary hover:text-primary hover:shadow-primary/20 hover:shadow-md transition-all"
+            className="mt-0.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border border-border/60 dark:border-white/10 text-muted-foreground bg-white dark:bg-[#1a1a2e] shadow-sm hover:border-primary hover:text-primary hover:shadow-primary/20 hover:shadow-md transition-all"
             title="Edit transaction"
           >
             <Pencil className="h-3 w-3" />

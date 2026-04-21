@@ -55,7 +55,8 @@ function BarTooltip({ active, payload, label }: any) {
 
 function PieTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
-  const { name, value, color } = payload[0].payload;
+  const { name, color } = payload[0].payload;
+  const value = payload[0].value;
   return (
     <div className="bg-white dark:bg-[#1a1a2e] px-3 py-2 rounded-xl shadow-lg border border-border/50 dark:border-white/10 text-center">
       <p className="text-[11px] font-semibold text-muted-foreground mb-0.5">{name}</p>

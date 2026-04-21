@@ -124,10 +124,8 @@ export default function LandingPage() {
             Stay on budget.
           </h1>
 
-          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-xl mb-10">
-            The Ledger is the simplest way for students to log daily expenses,
-            categorise purchases, and send clean invoices to parents — all from
-            one dashboard.
+          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mb-10">
+            The Ledger is the simplest way for students to log daily expenses. Whether you're sending clean invoices to your parents for reimbursable costs, or simply tracking a fixed monthly allowance — do it all from one dynamic dashboard.
           </p>
 
           <div className="flex flex-wrap items-center gap-4">
@@ -167,12 +165,12 @@ export default function LandingPage() {
                 {[
                   { label: "Expense Tracking", icon: Receipt, color: "#6366f1" },
                   { label: "Parent Invoices", icon: FileText, color: "#f59e0b" },
-                  { label: "Spending Analytics", icon: PieChart, color: "#10b981" },
+                  { label: "Allowance Mode", icon: PieChart, color: "#10b981" },
+                  { label: "Dashboard Analytics", icon: PieChart, color: "#3b82f6" },
                   { label: "Mobile-First", icon: Smartphone, color: "#8b5cf6" },
                   { label: "Secure Data", icon: Shield, color: "#ef4444" },
                   { label: "PDF Statements", icon: FileText, color: "#06b6d4" },
-                  { label: "Category Tracking", icon: Receipt, color: "#f59e0b" },
-                  { label: "Instant Loads", icon: Zap, color: "#10b981" },
+                  { label: "Dual Views", icon: Zap, color: "#10b981" },
                 ].map((pill) => (
                   <div
                     key={pill.label}
@@ -219,7 +217,7 @@ export default function LandingPage() {
               </h2>
             </div>
             <p className="text-muted-foreground text-base sm:text-lg max-w-md leading-relaxed lg:text-right">
-              From logging a R50 lunch to invoicing your parents R3,000 — we handle the full lifecycle of student spending.
+              From logging a R50 lunch, to invoicing your parents R3,000, or tracking fixed debits on your allowance — we handle the full lifecycle of student spending.
             </p>
           </div>
 
@@ -304,7 +302,7 @@ export default function LandingPage() {
               </h2>
             </div>
             <p className="text-muted-foreground text-base sm:text-lg max-w-md leading-relaxed lg:text-right">
-              From your first coffee to month-end invoice — the whole flow takes under a minute.
+              Whether you rely on an allowance or parent reimbursements, your daily workflow stays quick and simple.
             </p>
           </div>
 

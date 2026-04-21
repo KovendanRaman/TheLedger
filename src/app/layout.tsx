@@ -115,6 +115,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <body
+        suppressHydrationWarning
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <AuthSessionProvider>

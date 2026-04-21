@@ -27,6 +27,7 @@ import {
   LayoutGrid,
   Loader2,
   FileText,
+  Plus,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/backend/lib/utils";
@@ -191,10 +192,17 @@ export default function ExpensesPage() {
           </div>
           <Link
             href="/invoices"
-            className="p-2.5 rounded-full bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-sm hover:bg-secondary dark:hover:bg-white/10 transition-colors"
+            className="p-2.5 rounded-full bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-sm hover:bg-secondary dark:hover:bg-white/10 transition-colors hidden sm:block"
             title="Statements"
           >
             <FileText className="h-5 w-5 text-foreground" />
+          </Link>
+          <Link
+            href="/add"
+            className="p-2.5 rounded-full bg-primary border border-primary shadow-sm shadow-primary/20 flex items-center justify-center transition-transform hover:scale-[1.02] active:scale-95"
+            title="Add transaction"
+          >
+            <Plus className="h-5 w-5 text-white" />
           </Link>
           <button
             onClick={() => setShowFilters((v) => !v)}
