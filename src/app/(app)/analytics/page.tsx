@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
@@ -8,28 +8,31 @@ import {
 import { BottomNav } from "@/frontend/components/bottom-nav";
 import { PageTransition } from "@/frontend/components/page-transition";
 import { IS_MOCK_MODE, MOCK_TRANSACTIONS, MOCK_CATEGORIES } from "@/backend/lib/mock-data";
-import { getUserTransactions, getCategories, getUserIncomes } from "@/backend/actions/data";
+import { getUserTransactions, getCategories, getUserIncomes, getUserProfile } from "@/backend/actions/data";
 import { getRecurringExpenses } from "@/backend/actions/allowance";
 import type { Transaction, Category, Income, RecurringExpense } from "@/backend/lib/types/database.types";
 import { formatCurrency } from "@/backend/lib/utils";
 import {
   ChevronLeft, TrendingUp, ShoppingBag,
   ReceiptText, Clock, FileCheck, CheckCircle2, ArrowUpRight,
-  Calculator, AlertCircle, Wallet, ArrowDownCircle, ArrowUpCircle, ShieldCheck
+  Calculator, Wallet, ArrowUpCircle, ShieldCheck, FileDown, Loader2
 } from "lucide-react";
+import { downloadPersonalExpensesPDF } from "@/frontend/lib/generate-expenses-pdf";
 import Link from "next/link";
 import { cn } from "@/backend/lib/utils";
 import { TransactionListSkeleton } from "@/frontend/components/transaction-card-skeleton";
 import { format, subMonths, startOfMonth, parseISO, isAfter, isSameMonth, differenceInDays } from "date-fns";
 import { useAppMode } from "@/frontend/components/app-mode-provider";
 
-type Period = "month" | "quarter" | "all";
+type Period = "month" | "quarter" | "year" | "all";
 
 const PERIODS: { label: string; value: Period }[] = [
   { label: "This Month", value: "month" },
   { label: "3 Months", value: "quarter" },
+  { label: "1 Year", value: "year" },
   { label: "All Time", value: "all" },
 ];
+
 
 function getCategoryById(categories: Category[], id: string | null) {
   return categories.find((c) => c.id === id) ?? null;
@@ -81,6 +84,7 @@ export default function AnalyticsPage() {
   const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>("month");
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -129,6 +133,10 @@ export default function AnalyticsPage() {
       const cutoff = startOfMonth(subMonths(now, 2));
       return allTxns.filter((t) => isAfter(parseISO(t.date || t.created_at), cutoff) || isSameMonth(parseISO(t.date || t.created_at), cutoff));
     }
+    if (period === "year") {
+      const cutoff = subMonths(now, 12);
+      return allTxns.filter((t) => isAfter(parseISO(t.date || t.created_at), cutoff));
+    }
     return allTxns;
   }, [allTxns, period]);
 
@@ -141,6 +149,10 @@ export default function AnalyticsPage() {
        if (period === "quarter") {
          const cutoff = startOfMonth(subMonths(now, 2));
          return isAfter(parseISO(dateStr), cutoff) || isSameMonth(parseISO(dateStr), cutoff);
+       }
+       if (period === "year") {
+         const cutoff = subMonths(now, 12);
+         return isAfter(parseISO(dateStr), cutoff);
        }
        return true;
     });
@@ -160,6 +172,7 @@ export default function AnalyticsPage() {
     for (const d of activeDebits) {
        if (period === "month") totalFixedSpend += d.amount;
        if (period === "quarter") totalFixedSpend += d.amount * 3;
+       if (period === "year") totalFixedSpend += d.amount * 12;
        if (period === "all") totalFixedSpend += d.amount * 6; // Rough estimate
     }
     
@@ -171,6 +184,7 @@ export default function AnalyticsPage() {
        if (inc.is_recurring) {
           if (period === "month") totalIncome += inc.amount;
           if (period === "quarter") totalIncome += inc.amount * 3;
+          if (period === "year") totalIncome += inc.amount * 12;
           if (period === "all") totalIncome += inc.amount * 6; // Rough estimate
        } else {
           totalIncome += inc.amount;
@@ -181,6 +195,7 @@ export default function AnalyticsPage() {
     const now = new Date();
     let daysCount = 30;
     if (period === "quarter") daysCount = 90;
+    if (period === "year") daysCount = 365;
     if (period === "all" && filteredTxns.length > 0) {
        const oldest = filteredTxns.reduce((earliest, t) => {
          const d = parseISO(t.date || t.created_at);
@@ -280,6 +295,31 @@ export default function AnalyticsPage() {
   const isEmpty = !loading && filteredTxns.length === 0 && appMode === "INVOICE";
   // For allowance mode, we might have incomes and debits but no transactions
   const isAllowanceEmpty = !loading && filteredTxns.length === 0 && allIncomes.length === 0 && allDebits.length === 0;
+
+  // ─── PDF export ─────────────────────────────────────────────────────────────
+  const handleExportPDF = useCallback(async () => {
+    if (pdfLoading) return;
+    setPdfLoading(true);
+    try {
+      // Get user profile for name/email
+      const profile = IS_MOCK_MODE
+        ? { full_name: "Demo User", email: "demo@theledger.app" }
+        : await getUserProfile();
+
+      const personalTxns = filteredTxns.filter((t) => !t.is_invoicable);
+      await downloadPersonalExpensesPDF(
+        personalTxns,
+        categories,
+        period,
+        profile?.full_name ?? "User",
+        profile?.email ?? ""
+      );
+    } catch (err) {
+      console.error("PDF export failed:", err);
+    } finally {
+      setPdfLoading(false);
+    }
+  }, [filteredTxns, categories, period, pdfLoading]);
 
   return (
     <PageTransition className="min-h-screen bg-background pb-36 lg:pb-16">
@@ -402,14 +442,37 @@ export default function AnalyticsPage() {
                 <div className="p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Personal</p>
-                    <div className="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-500/20 flex items-center justify-center">
-                      <ShoppingBag className="h-4 w-4 text-pink-500 dark:text-pink-400" />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleExportPDF}
+                        disabled={pdfLoading || loading}
+                        title="Download personal expense report"
+                        className="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-500/20 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-500/30 transition-colors disabled:opacity-50"
+                      >
+                        {pdfLoading
+                          ? <Loader2 className="h-3.5 w-3.5 text-pink-500 dark:text-pink-400 animate-spin" />
+                          : <FileDown className="h-3.5 w-3.5 text-pink-500 dark:text-pink-400" />}
+                      </button>
                     </div>
                   </div>
                   <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(personalTotal)}</p>
                   <p className="text-[12px] font-medium text-muted-foreground mt-1">
                     {filteredTxns.filter((t) => !t.is_invoicable).length} txns
                   </p>
+                  <button
+                    onClick={handleExportPDF}
+                    disabled={pdfLoading || loading}
+                    className={cn(
+                      "mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-[0.75rem] text-[11px] font-semibold transition-all",
+                      pdfLoading || loading
+                        ? "bg-muted text-muted-foreground cursor-not-allowed"
+                        : "bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 hover:bg-pink-100 dark:hover:bg-pink-500/20"
+                    )}
+                  >
+                    {pdfLoading
+                      ? <><Loader2 className="h-3 w-3 animate-spin" /> Generating…</>
+                      : <><FileDown className="h-3 w-3" /> Download Report</>}
+                  </button>
                 </div>
               </>
             ) : (
@@ -465,6 +528,30 @@ export default function AnalyticsPage() {
                   <p className="text-[12px] font-medium text-muted-foreground mt-1">
                     spent per day
                   </p>
+                </div>
+
+                {/* Export Report — Allowance Mode */}
+                <div className="col-span-2 p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[13px] font-bold text-foreground">Personal Expense Report</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Download a PDF of your spending for this period</p>
+                    </div>
+                    <button
+                      onClick={handleExportPDF}
+                      disabled={pdfLoading || loading}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2.5 rounded-[1rem] text-[13px] font-semibold transition-all flex-shrink-0 ml-3",
+                        pdfLoading || loading
+                          ? "bg-muted text-muted-foreground cursor-not-allowed"
+                          : "gradient-primary text-white glow-primary shadow-md hover:opacity-90"
+                      )}
+                    >
+                      {pdfLoading
+                        ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
+                        : <><FileDown className="h-4 w-4" /> Download</>}
+                    </button>
+                  </div>
                 </div>
                </>
             )}
