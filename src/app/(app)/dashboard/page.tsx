@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/backend/lib/auth";
-import { getDashboardData, getAllowanceDashboardData, getUserProfile } from "@/backend/actions/data";
+import { getUserTransactions, getAllowanceDashboardData, getUserProfile } from "@/backend/actions/data";
 import { BottomNav } from "@/frontend/components/bottom-nav";
 import { LazyMoneyFlowChart, LazySpendingCategoryChart } from "@/frontend/components/dashboard-charts";
 import { PageTransition } from "@/frontend/components/page-transition";
@@ -17,7 +17,7 @@ import { Calendar, Plus, ArrowUpRight, Wallet, ArrowRight, Settings } from "luci
 import { CategoryBadge } from "@/frontend/components/category-badge";
 import { AnimatedCounter } from "@/frontend/components/animated-counter";
 import Link from "next/link";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isSameMonth } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +35,7 @@ export default async function DashboardPage() {
 
     const [profile, fetchedTxns] = await Promise.all([
       getUserProfile(),
-      getDashboardData(session.user.id),
+      getUserTransactions(),
     ]);
 
     appMode = profile?.appMode ?? "INVOICE";
@@ -94,12 +94,15 @@ export default async function DashboardPage() {
   }
 
   // ─── INVOICE mode (existing UI unchanged) ────────────────────
-  const totalSpend = txns.reduce((s, t) => s + t.amount, 0);
-  const invoicableTotal = txns
+  const now = new Date();
+  const currentMonthTxns = txns.filter((t) => isSameMonth(parseISO(t.date || t.created_at), now));
+
+  const totalSpend = currentMonthTxns.reduce((s, t) => s + t.amount, 0);
+  const invoicableTotal = currentMonthTxns
     .filter((t) => t.is_invoicable && t.status !== "paid")
     .reduce((s, t) => s + t.amount, 0);
-  const pendingCount = txns.filter((t) => t.is_invoicable && t.status === "pending").length;
-  const paidTotal = txns.filter((t) => t.is_invoicable && t.status === "paid").reduce((s, t) => s + t.amount, 0);
+  const personalTxns = currentMonthTxns.filter((t) => !t.is_invoicable);
+  const personalTotal = personalTxns.reduce((s, t) => s + t.amount, 0);
 
   const firstName = fullName?.split(" ")[0] ?? "Student";
 
@@ -150,7 +153,7 @@ export default async function DashboardPage() {
             <Link href="/analytics" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 dark:group-hover:bg-white/10 transition-colors">
               <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
-            <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Spent</h3>
+            <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Total Spend</h3>
             <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-4 leading-none">
               <AnimatedCounter
                 value={totalSpend}
@@ -159,7 +162,7 @@ export default async function DashboardPage() {
               />
             </p>
             <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">
-              {txns.length} transaction{txns.length !== 1 ? "s" : ""}
+              {currentMonthTxns.length} transaction{currentMonthTxns.length !== 1 ? "s" : ""}
             </p>
           </div>
 
@@ -180,21 +183,21 @@ export default async function DashboardPage() {
             <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">Pending invoice</p>
           </div>
 
-          {/* Card 3: Paid out */}
+          {/* Card 3: Personal */}
           <div className="bg-white dark:bg-[#1a1a2e] p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 dark:border-white/10 shadow-sm relative group">
             <Link href="/expenses" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 dark:group-hover:bg-white/10 transition-colors">
               <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
-            <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Paid</h3>
+            <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Personal</h3>
             <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-4 leading-none">
               <AnimatedCounter
-                value={paidTotal}
+                value={personalTotal}
                 prefix="R"
                 duration={1.6}
                 prefixClassName="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5"
               />
             </p>
-            <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">{pendingCount} still pending</p>
+            <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">{personalTxns.length} transaction{personalTxns.length !== 1 ? "s" : ""}</p>
           </div>
         </div>
 
@@ -218,7 +221,7 @@ export default async function DashboardPage() {
                   </select>
                 </div>
               </div>
-              <LazyMoneyFlowChart transactions={txns} />
+              <LazyMoneyFlowChart transactions={currentMonthTxns} />
             </div>
 
             {/* Recent Transactions */}
@@ -232,7 +235,7 @@ export default async function DashboardPage() {
 
               {/* Mobile card list */}
               <div className="md:hidden space-y-1">
-                {txns.slice(0, 5).map((txn) => {
+                {currentMonthTxns.slice(0, 5).map((txn) => {
                   const category = txn.categories || MOCK_CATEGORIES.find(c => c.id === txn.category_id);
                   const dateLabel = format(parseISO((txn.date || txn.created_at).split("T")[0]), "dd MMM");
                   return (
@@ -271,7 +274,7 @@ export default async function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {txns.slice(0, 5).map((txn) => {
+                    {currentMonthTxns.slice(0, 5).map((txn) => {
                       const category = txn.categories || MOCK_CATEGORIES.find(c => c.id === txn.category_id);
                       const dateLabel = format(parseISO((txn.date || txn.created_at).split("T")[0]), "dd MMM yyyy");
                       return (
@@ -319,7 +322,7 @@ export default async function DashboardPage() {
                 <ArrowUpRight className="w-4 h-4" />
               </Link>
               <h2 className="text-lg font-bold mb-6">Spending by category</h2>
-              <LazySpendingCategoryChart transactions={txns} />
+              <LazySpendingCategoryChart transactions={currentMonthTxns} />
             </div>
 
           </div>
