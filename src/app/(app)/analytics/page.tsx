@@ -17,7 +17,7 @@ import {
   ReceiptText, Clock, FileCheck, CheckCircle2, ArrowUpRight,
   Calculator, Wallet, ArrowUpCircle, ShieldCheck, FileDown, Loader2
 } from "lucide-react";
-import { downloadPersonalExpensesPDF } from "@/frontend/lib/generate-expenses-pdf";
+import { downloadExpensesPDF, type ReportType } from "@/frontend/lib/generate-expenses-pdf";
 import Link from "next/link";
 import { cn } from "@/backend/lib/utils";
 import { TransactionListSkeleton } from "@/frontend/components/transaction-card-skeleton";
@@ -84,7 +84,7 @@ export default function AnalyticsPage() {
   const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>("month");
-  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState<ReportType | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -297,27 +297,31 @@ export default function AnalyticsPage() {
   const isAllowanceEmpty = !loading && filteredTxns.length === 0 && allIncomes.length === 0 && allDebits.length === 0;
 
   // ─── PDF export ─────────────────────────────────────────────────────────────
-  const handleExportPDF = useCallback(async () => {
+  const handleExportPDF = useCallback(async (reportType: ReportType) => {
     if (pdfLoading) return;
-    setPdfLoading(true);
+    setPdfLoading(reportType);
     try {
       // Get user profile for name/email
       const profile = IS_MOCK_MODE
         ? { full_name: "Demo User", email: "demo@theledger.app" }
         : await getUserProfile();
 
-      const personalTxns = filteredTxns.filter((t) => !t.is_invoicable);
-      await downloadPersonalExpensesPDF(
-        personalTxns,
+      let exportTxns = filteredTxns;
+      if (reportType === "Personal") exportTxns = filteredTxns.filter((t) => !t.is_invoicable);
+      if (reportType === "Billable") exportTxns = filteredTxns.filter((t) => t.is_invoicable);
+
+      await downloadExpensesPDF(
+        exportTxns,
         categories,
         period,
         profile?.full_name ?? "User",
-        profile?.email ?? ""
+        profile?.email ?? "",
+        reportType
       );
     } catch (err) {
       console.error("PDF export failed:", err);
     } finally {
-      setPdfLoading(false);
+      setPdfLoading(null);
     }
   }, [filteredTxns, categories, period, pdfLoading]);
 
@@ -396,9 +400,23 @@ export default function AnalyticsPage() {
                "p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm",
                appMode === "INVOICE" ? "col-span-2" : "col-span-1"
             )}>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
-                Total Spend
-              </p>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Total Spend
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleExportPDF("Total")}
+                    disabled={pdfLoading !== null || loading}
+                    title="Download total expense report"
+                    className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/20 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-500/30 border border-blue-200 dark:border-blue-500/30 transition-colors disabled:opacity-50"
+                  >
+                    {pdfLoading === "Total"
+                      ? <Loader2 className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400 animate-spin" />
+                      : <FileDown className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />}
+                  </button>
+                </div>
+              </div>
               <p className={cn("font-bold text-foreground leading-none tracking-tight", appMode === "INVOICE" ? "text-[32px]" : "text-[22px]")}>
                 {formatCurrency(totalSpend)}
               </p>
@@ -418,6 +436,20 @@ export default function AnalyticsPage() {
                     <span className="text-[11px] font-medium text-muted-foreground">{billablePct}% billable</span>
                     <span className="text-[11px] font-medium text-muted-foreground">{100 - billablePct}% personal</span>
                   </div>
+                  <button
+                    onClick={() => handleExportPDF("Total")}
+                    disabled={pdfLoading !== null || loading}
+                    className={cn(
+                      "mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-[0.75rem] text-[11px] font-semibold transition-all border border-blue-200 dark:border-blue-500/30",
+                      pdfLoading !== null || loading
+                        ? "bg-muted text-muted-foreground cursor-not-allowed"
+                        : "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20"
+                    )}
+                  >
+                    {pdfLoading === "Total"
+                      ? <><Loader2 className="h-3 w-3 animate-spin" /> Generating…</>
+                      : <><FileDown className="h-3 w-3" /> Download Report</>}
+                  </button>
                 </>
               )}
             </div>
@@ -428,14 +460,37 @@ export default function AnalyticsPage() {
                 <div className="p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Billable</p>
-                    <div className="w-8 h-8 rounded-full bg-violet-50 dark:bg-violet-500/20 flex items-center justify-center">
-                      <ReceiptText className="h-4 w-4 text-violet-500 dark:text-violet-400" />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleExportPDF("Billable")}
+                        disabled={pdfLoading !== null || loading}
+                        title="Download billable expense report"
+                        className="w-8 h-8 rounded-full bg-violet-50 dark:bg-violet-500/20 flex items-center justify-center hover:bg-violet-100 dark:hover:bg-violet-500/30 transition-colors disabled:opacity-50"
+                      >
+                        {pdfLoading === "Billable"
+                          ? <Loader2 className="h-3.5 w-3.5 text-violet-500 dark:text-violet-400 animate-spin" />
+                          : <FileDown className="h-3.5 w-3.5 text-violet-500 dark:text-violet-400" />}
+                      </button>
                     </div>
                   </div>
                   <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(billableTotal)}</p>
                   <p className="text-[12px] font-medium text-muted-foreground mt-1">
                     {filteredTxns.filter((t) => t.is_invoicable).length} txns
                   </p>
+                  <button
+                    onClick={() => handleExportPDF("Billable")}
+                    disabled={pdfLoading !== null || loading}
+                    className={cn(
+                      "mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-[0.75rem] text-[11px] font-semibold transition-all",
+                      pdfLoading !== null || loading
+                        ? "bg-muted text-muted-foreground cursor-not-allowed"
+                        : "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-500/20"
+                    )}
+                  >
+                    {pdfLoading === "Billable"
+                      ? <><Loader2 className="h-3 w-3 animate-spin" /> Generating…</>
+                      : <><FileDown className="h-3 w-3" /> Download Report</>}
+                  </button>
                 </div>
 
                 {/* Personal */}
@@ -444,12 +499,12 @@ export default function AnalyticsPage() {
                     <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Personal</p>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={handleExportPDF}
-                        disabled={pdfLoading || loading}
+                        onClick={() => handleExportPDF("Personal")}
+                        disabled={pdfLoading !== null || loading}
                         title="Download personal expense report"
                         className="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-500/20 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-500/30 transition-colors disabled:opacity-50"
                       >
-                        {pdfLoading
+                        {pdfLoading === "Personal"
                           ? <Loader2 className="h-3.5 w-3.5 text-pink-500 dark:text-pink-400 animate-spin" />
                           : <FileDown className="h-3.5 w-3.5 text-pink-500 dark:text-pink-400" />}
                       </button>
@@ -460,16 +515,16 @@ export default function AnalyticsPage() {
                     {filteredTxns.filter((t) => !t.is_invoicable).length} txns
                   </p>
                   <button
-                    onClick={handleExportPDF}
-                    disabled={pdfLoading || loading}
+                    onClick={() => handleExportPDF("Personal")}
+                    disabled={pdfLoading !== null || loading}
                     className={cn(
                       "mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-[0.75rem] text-[11px] font-semibold transition-all",
-                      pdfLoading || loading
+                      pdfLoading !== null || loading
                         ? "bg-muted text-muted-foreground cursor-not-allowed"
                         : "bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 hover:bg-pink-100 dark:hover:bg-pink-500/20"
                     )}
                   >
-                    {pdfLoading
+                    {pdfLoading === "Personal"
                       ? <><Loader2 className="h-3 w-3 animate-spin" /> Generating…</>
                       : <><FileDown className="h-3 w-3" /> Download Report</>}
                   </button>
@@ -538,16 +593,16 @@ export default function AnalyticsPage() {
                       <p className="text-[11px] text-muted-foreground mt-0.5">Download a PDF of your spending for this period</p>
                     </div>
                     <button
-                      onClick={handleExportPDF}
-                      disabled={pdfLoading || loading}
+                      onClick={() => handleExportPDF("Personal")}
+                      disabled={pdfLoading !== null || loading}
                       className={cn(
                         "flex items-center gap-2 px-4 py-2.5 rounded-[1rem] text-[13px] font-semibold transition-all flex-shrink-0 ml-3",
-                        pdfLoading || loading
+                        pdfLoading !== null || loading
                           ? "bg-muted text-muted-foreground cursor-not-allowed"
                           : "gradient-primary text-white glow-primary shadow-md hover:opacity-90"
                       )}
                     >
-                      {pdfLoading
+                      {pdfLoading === "Personal"
                         ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
                         : <><FileDown className="h-4 w-4" /> Download</>}
                     </button>
