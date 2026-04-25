@@ -98,8 +98,8 @@ export default async function DashboardPage() {
   const invoicableTotal = txns
     .filter((t) => t.is_invoicable && t.status !== "paid")
     .reduce((s, t) => s + t.amount, 0);
-  const pendingCount = txns.filter((t) => t.status === "pending").length;
-  const paidTotal = txns.filter((t) => t.status === "paid").reduce((s, t) => s + t.amount, 0);
+  const pendingCount = txns.filter((t) => t.is_invoicable && t.status === "pending").length;
+  const paidTotal = txns.filter((t) => t.is_invoicable && t.status === "paid").reduce((s, t) => s + t.amount, 0);
 
   const firstName = fullName?.split(" ")[0] ?? "Student";
 

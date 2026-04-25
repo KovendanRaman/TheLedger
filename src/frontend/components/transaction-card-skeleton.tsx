@@ -1,13 +1,13 @@
 import { cn } from "@/backend/lib/utils";
 
-function Shimmer({ className }: { className?: string }) {
+export function Shimmer({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-lg bg-border/40",
+        "relative overflow-hidden rounded-lg bg-border/40 dark:bg-border/20",
         "before:absolute before:inset-0 before:-translate-x-full",
         "before:animate-[shimmer_1.6s_infinite]",
-        "before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent",
+        "before:bg-gradient-to-r before:from-transparent before:via-white/60 dark:before:via-white/10 before:to-transparent",
         className
       )}
     />

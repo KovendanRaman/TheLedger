@@ -21,11 +21,9 @@ export function useTheme() {
 
 export function ThemeProvider({
   initialTheme,
-  userId,
   children,
 }: {
   initialTheme: Theme;
-  userId: string;
   children: React.ReactNode;
 }) {
   const [theme, setTheme] = useState<Theme>(initialTheme);
@@ -42,8 +40,8 @@ export function ThemeProvider({
   const toggleTheme = useCallback(() => {
     const next: Theme = theme === "light" ? "dark" : "light";
     setTheme(next);
-    updateTheme(userId, next);
-  }, [theme, userId]);
+    updateTheme(next);
+  }, [theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

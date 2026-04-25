@@ -38,15 +38,19 @@ export async function registerUser(
   return { error: null };
 }
 
+import { auth } from "@/backend/lib/auth";
+
 export async function updateSharingEnabled(
-  userId: string,
   enabled: boolean
 ): Promise<{ error: string | null }> {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "Not authenticated." };
+
     await db
       .update(users)
       .set({ isSharingEnabled: enabled })
-      .where(eq(users.id, userId));
+      .where(eq(users.id, session.user.id));
     revalidatePath("/settings");
     return { error: null };
   } catch {
@@ -55,14 +59,16 @@ export async function updateSharingEnabled(
 }
 
 export async function updateTheme(
-  userId: string,
   theme: "light" | "dark"
 ): Promise<{ error: string | null }> {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "Not authenticated." };
+
     await db
       .update(users)
       .set({ theme })
-      .where(eq(users.id, userId));
+      .where(eq(users.id, session.user.id));
     return { error: null };
   } catch {
     return { error: "Could not update theme preference." };

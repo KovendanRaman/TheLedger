@@ -764,7 +764,7 @@ export default function SettingsPage() {
       return;
     }
     startSharingTransition(async () => {
-      const { error } = await updateSharingEnabled(profile.id, enabled);
+      const { error } = await updateSharingEnabled(enabled);
       if (error) {
         toast.error(error);
       } else {

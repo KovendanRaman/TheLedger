@@ -20,7 +20,7 @@ import {
 import { downloadExpensesPDF, type ReportType } from "@/frontend/lib/generate-expenses-pdf";
 import Link from "next/link";
 import { cn } from "@/backend/lib/utils";
-import { TransactionListSkeleton } from "@/frontend/components/transaction-card-skeleton";
+import { TransactionListSkeleton, Shimmer } from "@/frontend/components/transaction-card-skeleton";
 import { format, subMonths, startOfMonth, parseISO, isAfter, isSameMonth, differenceInDays } from "date-fns";
 import { useAppMode } from "@/frontend/components/app-mode-provider";
 
@@ -70,8 +70,75 @@ function PieTooltip({ active, payload }: any) {
 
 // ─── Skeleton blocks ──────────────────────────────────────────────────────────
 
-function SkeletonCard({ className }: { className?: string }) {
-  return <div className={cn("rounded-[1.5rem] bg-border/30 animate-pulse", className)} />;
+function KpiSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn("p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm flex flex-col justify-between", className)}>
+      <div className="flex items-center justify-between mb-3">
+        <Shimmer className="h-3 w-16" />
+        <Shimmer className="h-8 w-8 rounded-[0.75rem]" />
+      </div>
+      <div>
+        <Shimmer className="h-6 w-24 mb-2" />
+        <Shimmer className="h-3 w-12" />
+      </div>
+    </div>
+  );
+}
+
+function AnalyticsSkeleton({ appMode }: { appMode: "INVOICE" | "ALLOWANCE" }) {
+  return (
+    <div className="px-4 sm:px-5 space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        {/* Total Spend */}
+        <KpiSkeleton className={appMode === "INVOICE" ? "col-span-2 h-[140px]" : "col-span-1 h-[140px]"} />
+        
+        {appMode === "INVOICE" ? (
+          <>
+            <KpiSkeleton className="h-[140px]" />
+            <KpiSkeleton className="h-[140px]" />
+          </>
+        ) : (
+          <>
+            <KpiSkeleton className="h-[140px]" />
+            <KpiSkeleton className="h-[140px]" />
+            <KpiSkeleton className="h-[140px]" />
+            <KpiSkeleton className="h-[140px]" />
+            <div className="col-span-2 p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm flex justify-between items-center h-20">
+              <div className="space-y-2">
+                <Shimmer className="h-4 w-32" />
+                <Shimmer className="h-3 w-48" />
+              </div>
+              <Shimmer className="h-9 w-24 rounded-[1rem]" />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Chart Block */}
+      <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <Shimmer className="h-4 w-32" />
+          <Shimmer className="h-4 w-4" />
+        </div>
+        <Shimmer className="h-3 w-48 mb-6" />
+        <Shimmer className="h-[180px] w-full rounded-xl" />
+      </div>
+
+      {/* Donut Block */}
+      <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm flex flex-col sm:flex-row gap-4">
+        <Shimmer className="h-[140px] w-[140px] rounded-full mx-auto sm:mx-0 flex-shrink-0" />
+        <div className="flex-1 space-y-4 py-2">
+          <Shimmer className="h-3 w-full" />
+          <Shimmer className="h-3 w-5/6" />
+          <Shimmer className="h-3 w-4/6" />
+          <Shimmer className="h-3 w-3/6" />
+        </div>
+      </div>
+
+      {/* Top Transactions List */}
+      <TransactionListSkeleton count={4} />
+    </div>
+  );
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -368,17 +435,7 @@ export default function AnalyticsPage() {
       </div>
 
       {loading ? (
-        <div className="px-4 sm:px-5 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <SkeletonCard className="h-28" />
-            <SkeletonCard className="h-28" />
-            <SkeletonCard className="h-28" />
-            <SkeletonCard className="h-28" />
-          </div>
-          <SkeletonCard className="h-64" />
-          <SkeletonCard className="h-56" />
-          <TransactionListSkeleton count={5} />
-        </div>
+        <AnalyticsSkeleton appMode={appMode} />
       ) : (appMode === "INVOICE" ? isEmpty : isAllowanceEmpty) ? (
         <div className="px-5 flex flex-col items-center justify-center py-24 text-center">
           <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center mb-5">

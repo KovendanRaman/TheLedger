@@ -17,7 +17,6 @@ export default async function AppLayout({
   return (
     <ThemeProvider
       initialTheme={profile?.theme ?? "light"}
-      userId={profile?.id ?? ""}
     >
       <AppModeProvider
         appMode={profile?.appMode ?? "INVOICE"}
