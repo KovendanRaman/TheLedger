@@ -192,10 +192,14 @@ export function AnalyticsClient({
       if (reportType === "Personal") exportTxns = allTxns.filter((t) => !t.is_invoicable);
       if (reportType === "Billable") exportTxns = allTxns.filter((t) => t.is_invoicable);
 
+      const label = from && to
+        ? `${format(parseISO(from), "dd MMM yyyy")} – ${format(parseISO(to), "dd MMM yyyy")}`
+        : "Custom Range";
+
       await downloadExpensesPDF(
         exportTxns,
         categories,
-        "custom",
+        label,
         userProfile?.full_name ?? "User",
         userProfile?.email ?? "",
         reportType

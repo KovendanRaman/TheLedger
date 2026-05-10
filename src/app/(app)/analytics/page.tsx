@@ -404,6 +404,16 @@ export default function AnalyticsPage() {
   const isAllowanceEmpty = !loading && filteredTxns.length === 0 && allIncomes.length === 0 && allDebits.length === 0;
 
   // ─── PDF export ─────────────────────────────────────────────────────────────
+  const periodLabel = useMemo(() => {
+    if (period === "month") return "This Month";
+    if (period === "year") return "Last 12 Months";
+    if (period === "all") return "All Time";
+    if (period === "custom" && customRange?.from && customRange?.to) {
+      return `${format(customRange.from, "dd MMM yyyy")} – ${format(customRange.to, "dd MMM yyyy")}`;
+    }
+    return "Custom Range";
+  }, [period, customRange]);
+
   const handleExportPDF = useCallback(async (reportType: ReportType) => {
     if (pdfLoading) return;
     setPdfLoading(reportType);
@@ -420,7 +430,7 @@ export default function AnalyticsPage() {
       await downloadExpensesPDF(
         exportTxns,
         categories,
-        period,
+        periodLabel,
         profile?.full_name ?? "User",
         profile?.email ?? "",
         reportType
