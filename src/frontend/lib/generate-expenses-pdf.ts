@@ -1,15 +1,6 @@
 import type { Transaction, Category } from "@/backend/lib/types/database.types";
 import { format, parseISO } from "date-fns";
 
-type Period = "month" | "quarter" | "year" | "all";
-
-const PERIOD_LABEL: Record<Period, string> = {
-  month: "This Month",
-  quarter: "Last 3 Months",
-  year: "Last 12 Months",
-  all: "All Time",
-};
-
 function fmt(amount: number) {
   return `R ${amount.toLocaleString("en-ZA", {
     minimumFractionDigits: 2,
@@ -31,7 +22,7 @@ export type ReportType = "Personal" | "Billable" | "Total";
 export async function downloadExpensesPDF(
   txns: Transaction[],
   categories: Category[],
-  period: Period,
+  periodLabel: string,
   userName: string,
   userEmail: string,
   reportType: ReportType = "Personal"
@@ -42,13 +33,19 @@ export async function downloadExpensesPDF(
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-  const periodLabel = PERIOD_LABEL[period];
   const generatedDate = format(new Date(), "dd MMM yyyy");
-  const totalSpend = txns.reduce((s, t) => s + t.amount, 0);
+
+  const sortedTxns = [...txns].sort((a, b) => {
+    const da = (a.date ?? a.created_at ?? "").split("T")[0];
+    const db = (b.date ?? b.created_at ?? "").split("T")[0];
+    return da.localeCompare(db); // oldest first
+  });
+
+  const totalSpend = sortedTxns.reduce((s, t) => s + t.amount, 0);
 
   // ── Category breakdown ──────────────────────────────────────
   const catTotals: Record<string, { name: string; amount: number }> = {};
-  for (const t of txns) {
+  for (const t of sortedTxns) {
     if (t.categories) {
       const key = t.category_id ?? t.categories.name;
       if (!catTotals[key]) catTotals[key] = { name: t.categories.name, amount: 0 };
@@ -132,7 +129,7 @@ export async function downloadExpensesPDF(
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...GRAY_600);
   doc.text(`Period: ${periodLabel}`, W - 14, y, { align: "right" });
-  doc.text(`Transactions: ${txns.length}`, W - 14, y + 5, { align: "right" });
+  doc.text(`Transactions: ${sortedTxns.length}`, W - 14, y + 5, { align: "right" });
   const typeText = reportType === "Total" ? "All Expenses" : `${reportType} Expenses Only`;
   doc.text(`Type: ${typeText}`, W - 14, y + 10, { align: "right" });
 
@@ -169,7 +166,7 @@ export async function downloadExpensesPDF(
   // ── Transaction table ─────────────────────────────────────────
   const isTotalReport = reportType === "Total";
 
-  const tableRows = txns.map((t) => {
+  const tableRows = sortedTxns.map((t) => {
     const row = [
       fmtDate(t.date ?? t.created_at),
       t.description,
@@ -247,7 +244,7 @@ export async function downloadExpensesPDF(
   doc.text("Transactions", totalBlockX + 2, finalY + 5);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...GRAY_900);
-  doc.text(`${txns.length}`, W - 14, finalY + 5, { align: "right" });
+  doc.text(`${sortedTxns.length}`, W - 14, finalY + 5, { align: "right" });
 
   doc.setFillColor(...INDIGO);
   doc.roundedRect(totalBlockX, finalY + 8, 60, 10, 2, 2, "F");
@@ -292,6 +289,6 @@ export async function downloadExpensesPDF(
   }
 
   // ── Save ─────────────────────────────────────────────────────
-  const fileName = `${reportType.toLowerCase()}-expenses-${periodLabel.toLowerCase().replace(/\s+/g, "-")}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+  const fileName = `${reportType.toLowerCase()}-expenses-${periodLabel.toLowerCase().replace(/[\s/]+/g, "-")}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
   doc.save(fileName);
 }

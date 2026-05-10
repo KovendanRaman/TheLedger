@@ -1,40 +1,35 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 import { BottomNav } from "@/frontend/components/bottom-nav";
 import { PageTransition } from "@/frontend/components/page-transition";
-import { IS_MOCK_MODE, MOCK_TRANSACTIONS, MOCK_CATEGORIES } from "@/backend/lib/mock-data";
-import { getUserTransactions, getCategories, getUserIncomes, getUserProfile } from "@/backend/actions/data";
-import { getRecurringExpenses } from "@/backend/actions/allowance";
-import type { Transaction, Category, Income, RecurringExpense } from "@/backend/lib/types/database.types";
+import type { Transaction, Category, RecurringExpense, UserProfile } from "@/backend/lib/types/database.types";
 import { formatCurrency } from "@/backend/lib/utils";
 import {
   ChevronLeft, TrendingUp,
-  Clock, FileCheck, CheckCircle2, ArrowUpRight,
-  Calculator, Wallet, ArrowUpCircle, ShieldCheck, FileDown, Loader2,
-  Calendar as CalendarIcon, X
+  Loader2, FileDown, Wallet, ArrowUpCircle, ShieldCheck, Calculator
 } from "lucide-react";
 import { downloadExpensesPDF, type ReportType } from "@/frontend/lib/generate-expenses-pdf";
 import Link from "next/link";
 import { cn } from "@/backend/lib/utils";
-import { TransactionListSkeleton, Shimmer } from "@/frontend/components/transaction-card-skeleton";
-import { format, subDays, subMonths, startOfMonth, endOfMonth, parseISO, isAfter, isBefore, isSameMonth, differenceInDays } from "date-fns";
-import { DateRange } from "react-day-picker";
-import { useAppMode } from "@/frontend/components/app-mode-provider";
-import { Calendar } from "@/frontend/components/ui/calendar";
+import { format, parseISO, isAfter, differenceInDays } from "date-fns";
+import { DateRangePicker } from "@/frontend/components/date-range-picker";
 
-type Period = "month" | "year" | "all" | "custom";
+type Period = "month" | "quarter" | "year" | "all" | "custom";
 
-const PERIODS: { label: string; value: Period }[] = [
-  { label: "This Month", value: "month" },
-  { label: "1 Year", value: "year" },
-  { label: "All Time", value: "all" },
-];
-
+interface AnalyticsClientProps {
+  allTxns: Transaction[];
+  allIncomes: any[];
+  allDebits: RecurringExpense[];
+  categories: Category[];
+  userProfile: UserProfile | null;
+  from: string;
+  to: string;
+}
 
 function getCategoryById(categories: Category[], id: string | null) {
   return categories.find((c) => c.id === id) ?? null;
@@ -70,246 +65,50 @@ function PieTooltip({ active, payload }: any) {
   );
 }
 
-// ─── Skeleton blocks ──────────────────────────────────────────────────────────
-
-function KpiSkeleton({ className }: { className?: string }) {
-  return (
-    <div className={cn("p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm flex flex-col justify-between", className)}>
-      <div className="flex items-center justify-between mb-3">
-        <Shimmer className="h-3 w-16" />
-        <Shimmer className="h-8 w-8 rounded-[0.75rem]" />
-      </div>
-      <div>
-        <Shimmer className="h-6 w-24 mb-2" />
-        <Shimmer className="h-3 w-12" />
-      </div>
-    </div>
-  );
-}
-
-function AnalyticsSkeleton({ appMode }: { appMode: "INVOICE" | "ALLOWANCE" }) {
-  return (
-    <div className="px-4 sm:px-5 space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        {/* Total Spend */}
-        <KpiSkeleton className={appMode === "INVOICE" ? "col-span-2 h-[140px]" : "col-span-1 h-[140px]"} />
-        
-        {appMode === "INVOICE" ? (
-          <>
-            <KpiSkeleton className="h-[140px]" />
-            <KpiSkeleton className="h-[140px]" />
-          </>
-        ) : (
-          <>
-            <KpiSkeleton className="h-[140px]" />
-            <KpiSkeleton className="h-[140px]" />
-            <KpiSkeleton className="h-[140px]" />
-            <KpiSkeleton className="h-[140px]" />
-            <div className="col-span-2 p-4 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm flex justify-between items-center h-20">
-              <div className="space-y-2">
-                <Shimmer className="h-4 w-32" />
-                <Shimmer className="h-3 w-48" />
-              </div>
-              <Shimmer className="h-9 w-24 rounded-[1rem]" />
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Chart Block */}
-      <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
-        <div className="flex items-center justify-between mb-2">
-          <Shimmer className="h-4 w-32" />
-          <Shimmer className="h-4 w-4" />
-        </div>
-        <Shimmer className="h-3 w-48 mb-6" />
-        <Shimmer className="h-[180px] w-full rounded-xl" />
-      </div>
-
-      {/* Donut Block */}
-      <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm flex flex-col sm:flex-row gap-4">
-        <Shimmer className="h-[140px] w-[140px] rounded-full mx-auto sm:mx-0 flex-shrink-0" />
-        <div className="flex-1 space-y-4 py-2">
-          <Shimmer className="h-3 w-full" />
-          <Shimmer className="h-3 w-5/6" />
-          <Shimmer className="h-3 w-4/6" />
-          <Shimmer className="h-3 w-3/6" />
-        </div>
-      </div>
-
-      {/* Top Transactions List */}
-      <TransactionListSkeleton count={4} />
-    </div>
-  );
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
-
-export default function AnalyticsPage() {
-  const { appMode } = useAppMode();
-  const [allTxns, setAllTxns] = useState<Transaction[]>([]);
-  const [allIncomes, setAllIncomes] = useState<any[]>([]);
-  const [allDebits, setAllDebits] = useState<RecurringExpense[]>([]);
-  const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
-  const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState<Period>("month");
+export function AnalyticsClient({
+  allTxns,
+  allIncomes,
+  allDebits,
+  categories,
+  userProfile,
+  from,
+  to,
+}: AnalyticsClientProps) {
+  const appMode = userProfile?.appMode ?? "INVOICE";
   const [pdfLoading, setPdfLoading] = useState<ReportType | null>(null);
-  const [customRange, setCustomRange] = useState<DateRange | undefined>(undefined);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [pendingRange, setPendingRange] = useState<DateRange | undefined>(undefined);
 
-  const today = new Date();
-  const DATE_PRESETS = [
-    { label: "Last 7 days",    from: subDays(today, 6),                    to: today },
-    { label: "Last 30 days",   from: subDays(today, 29),                   to: today },
-    { label: "Last 3 months",  from: startOfMonth(subMonths(today, 2)),    to: endOfMonth(today) },
-    { label: "Last 6 months",  from: startOfMonth(subMonths(today, 5)),    to: endOfMonth(today) },
-  ];
-
-  const openSheet = () => {
-    setPendingRange(customRange);
-    setSheetOpen(true);
-  };
-
-  const applyPreset = (from: Date, to: Date) => {
-    const range = { from, to };
-    setCustomRange(range);
-    setPendingRange(range);
-    setPeriod("custom");
-    setSheetOpen(false);
-  };
-
-  const applyPendingRange = () => {
-    if (pendingRange?.from && pendingRange?.to) {
-      setCustomRange(pendingRange);
-      setPeriod("custom");
-      setSheetOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-    async function fetch() {
-      setLoading(true);
-      if (IS_MOCK_MODE) {
-        await new Promise<void>((r) => setTimeout(r, 0));
-        if (!cancelled) {
-          setAllTxns(MOCK_TRANSACTIONS);
-          setCategories(MOCK_CATEGORIES);
-          setAllIncomes([
-             { id: "inc1", amount: 2500, source: "Allowance", date: new Date().toISOString(), is_recurring: true }
-          ]);
-          setAllDebits([
-             { id: "deb1", user_id: "mock", name: "Spotify", amount: 60, billing_date: 10, is_active: true, created_at: new Date().toISOString() }
-          ]);
-          setLoading(false);
-        }
-        return;
-      }
-      const [txns, cats, incomes, debits] = await Promise.all([
-        getUserTransactions(),
-        getCategories(),
-        getUserIncomes(),
-        getRecurringExpenses(),
-      ]);
-      if (!cancelled) {
-        setAllTxns(txns);
-        setCategories(cats);
-        setAllIncomes(incomes);
-        setAllDebits(debits);
-        setLoading(false);
-      }
-    }
-    fetch();
-    return () => { cancelled = true; };
-  }, []);
-
-  // ─── Period filter ──────────────────────────────────────────────────────────
-  const filteredTxns = useMemo(() => {
-    const now = new Date();
-    if (period === "month") {
-      return allTxns.filter((t) => isSameMonth(parseISO(t.date || t.created_at), now));
-    }
-    if (period === "year") {
-      const cutoff = subMonths(now, 12);
-      return allTxns.filter((t) => isAfter(parseISO(t.date || t.created_at), cutoff));
-    }
-    if (period === "custom" && customRange?.from && customRange?.to) {
-      return allTxns.filter((t) => {
-        const d = parseISO(t.date || t.created_at);
-        return !isBefore(d, customRange.from!) && !isAfter(d, customRange.to!);
-      });
-    }
-    return allTxns;
-  }, [allTxns, period, customRange]);
-
-  const filteredIncomes = useMemo(() => {
-    const now = new Date();
-    return allIncomes.filter(i => {
-       if (i.is_recurring) return true;
-       const dateStr = i.date || new Date().toISOString();
-       if (period === "month") return isSameMonth(parseISO(dateStr), now);
-       if (period === "year") {
-         const cutoff = subMonths(now, 12);
-         return isAfter(parseISO(dateStr), cutoff);
-       }
-       if (period === "custom") {
-         if (!customRange?.from || !customRange?.to) return true;
-         const d = parseISO(dateStr);
-         return !isBefore(d, customRange.from) && !isAfter(d, customRange.to);
-       }
-       return true;
-    });
-  }, [allIncomes, period, customRange]);
-
-  // ─── KPIs ───────────────────────────────────────────────────────────────────
+  // Derive KPIs from pre-filtered data
   const kpis = useMemo(() => {
     let totalSpend = 0, billable = 0, personal = 0;
-    for (const t of filteredTxns) {
+    for (const t of allTxns) {
       totalSpend += t.amount;
       if (t.is_invoicable) billable += t.amount;
       else personal += t.amount;
     }
 
-    const customDays = (period === "custom" && customRange?.from && customRange?.to)
-      ? Math.max(1, differenceInDays(customRange.to, customRange.from) + 1)
-      : 30;
+    // Number of months in range for recurring calculations
+    const startDate = parseISO(from);
+    const endDate = parseISO(to);
+    const monthsInRange = Math.max(1, (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth()) + 1);
 
     let totalFixedSpend = 0;
     const activeDebits = allDebits.filter(d => d.is_active);
     for (const d of activeDebits) {
-       if (period === "month") totalFixedSpend += d.amount;
-       if (period === "year") totalFixedSpend += d.amount * 12;
-       if (period === "all") totalFixedSpend += d.amount * 6;
-       if (period === "custom") totalFixedSpend += d.amount * (customDays / 30);
+       totalFixedSpend += d.amount * monthsInRange;
     }
-
+    
     const trueTotalSpend = totalSpend + totalFixedSpend;
 
     let totalIncome = 0;
-    for (const inc of filteredIncomes) {
+    for (const inc of allIncomes) {
        if (inc.is_recurring) {
-          if (period === "month") totalIncome += inc.amount;
-          if (period === "year") totalIncome += inc.amount * 12;
-          if (period === "all") totalIncome += inc.amount * 6;
-          if (period === "custom") totalIncome += inc.amount * (customDays / 30);
+          totalIncome += inc.amount * monthsInRange;
        } else {
           totalIncome += inc.amount;
        }
     }
 
-    // Days in selected period
-    const now = new Date();
-    let daysCount = 30;
-    if (period === "year") daysCount = 365;
-    if (period === "custom") daysCount = customDays;
-    if (period === "all" && filteredTxns.length > 0) {
-       const oldest = filteredTxns.reduce((earliest, t) => {
-         const d = parseISO(t.date || t.created_at);
-         return isAfter(earliest, d) ? d : earliest;
-       }, new Date());
-       daysCount = Math.max(1, differenceInDays(now, oldest) + 1);
-    }
+    const daysCount = Math.max(1, differenceInDays(endDate, startDate) + 1);
 
     return { 
       totalSpend: trueTotalSpend, 
@@ -322,7 +121,7 @@ export default function AnalyticsPage() {
       totalIncome,
       netCashflow: totalIncome - trueTotalSpend
     };
-  }, [filteredTxns, filteredIncomes, allDebits, period, customRange]);
+  }, [allTxns, allIncomes, allDebits, from, to]);
 
   const { totalSpend, fixedSpend, billableTotal, personalTotal, billablePct, dailyAvg, totalIncome, netCashflow } = kpis;
 
@@ -331,7 +130,7 @@ export default function AnalyticsPage() {
     const buckets: Record<string, { label: string; personal: number; billable: number; totalSpend: number; totalIncome: number }> = {};
     
     // Transactions
-    filteredTxns.forEach((t) => {
+    allTxns.forEach((t) => {
       const dateStr = t.date || t.created_at;
       const key = dateStr.substring(0, 7); // YYYY-MM
       if (!buckets[key]) {
@@ -343,8 +142,8 @@ export default function AnalyticsPage() {
     });
 
     // Incomes
-    filteredIncomes.forEach((i) => {
-      if (i.is_recurring) return; // Ignore recurring in the bar chart individual buckets for now to avoid complexity
+    allIncomes.forEach((i) => {
+      if (i.is_recurring) return;
       const dateStr = i.date || new Date().toISOString();
       const key = dateStr.substring(0, 7);
       if (!buckets[key]) {
@@ -354,7 +153,7 @@ export default function AnalyticsPage() {
     });
 
     // Add recurring base to all buckets
-    const recIncomeSum = filteredIncomes.filter(i => i.is_recurring).reduce((s, i) => s + i.amount, 0);
+    const recIncomeSum = allIncomes.filter(i => i.is_recurring).reduce((s, i) => s + i.amount, 0);
     const recDebitSum = allDebits.filter(d => d.is_active).reduce((s, d) => s + d.amount, 0);
     
     Object.values(buckets).forEach(b => { 
@@ -365,12 +164,12 @@ export default function AnalyticsPage() {
     return Object.entries(buckets)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([, v]) => v);
-  }, [filteredTxns, filteredIncomes, allDebits]);
+  }, [allTxns, allIncomes, allDebits]);
 
   // ─── Category breakdown ─────────────────────────────────────────────────────
   const categoryData = useMemo(() => {
     const totals: Record<string, { amount: number; name: string; color: string }> = {};
-    filteredTxns.forEach((t) => {
+    allTxns.forEach((t) => {
       if (!t.category_id) return;
       const cat = getCategoryById(categories, t.category_id);
       if (!totals[t.category_id]) {
@@ -379,60 +178,30 @@ export default function AnalyticsPage() {
       totals[t.category_id].amount += t.amount;
     });
     return Object.values(totals).sort((a, b) => b.amount - a.amount).slice(0, 6);
-  }, [filteredTxns, categories]);
+  }, [allTxns, categories]);
 
-  // ─── Status breakdown (billable transactions only) ──────────────────────────
-  const statusData = useMemo(() => {
-    const billable = filteredTxns.filter((t) => t.is_invoicable);
-    const pending  = billable.filter((t) => t.status === "pending").reduce((s, t) => s + t.amount, 0);
-    const invoiced = billable.filter((t) => t.status === "invoiced").reduce((s, t) => s + t.amount, 0);
-    const settled  = billable.filter((t) => t.status === "paid").reduce((s, t) => s + t.amount, 0);
-    const pendingCount  = billable.filter((t) => t.status === "pending").length;
-    const invoicedCount = billable.filter((t) => t.status === "invoiced").length;
-    const settledCount  = billable.filter((t) => t.status === "paid").length;
-    return { pending, invoiced, settled, pendingCount, invoicedCount, settledCount };
-  }, [filteredTxns]);
-
-  // ─── Top transactions ───────────────────────────────────────────────────────
-  const topTxns = useMemo(
-    () => [...filteredTxns].sort((a, b) => b.amount - a.amount).slice(0, 5),
-    [filteredTxns]
-  );
-
-  const isEmpty = !loading && filteredTxns.length === 0 && appMode === "INVOICE";
-  // For allowance mode, we might have incomes and debits but no transactions
-  const isAllowanceEmpty = !loading && filteredTxns.length === 0 && allIncomes.length === 0 && allDebits.length === 0;
+  const isEmpty = allTxns.length === 0 && appMode === "INVOICE";
+  const isAllowanceEmpty = allTxns.length === 0 && allIncomes.length === 0 && allDebits.length === 0;
 
   // ─── PDF export ─────────────────────────────────────────────────────────────
-  const periodLabel = useMemo(() => {
-    if (period === "month") return "This Month";
-    if (period === "year") return "Last 12 Months";
-    if (period === "all") return "All Time";
-    if (period === "custom" && customRange?.from && customRange?.to) {
-      return `${format(customRange.from, "dd MMM yyyy")} – ${format(customRange.to, "dd MMM yyyy")}`;
-    }
-    return "Custom Range";
-  }, [period, customRange]);
-
   const handleExportPDF = useCallback(async (reportType: ReportType) => {
     if (pdfLoading) return;
     setPdfLoading(reportType);
     try {
-      // Get user profile for name/email
-      const profile = IS_MOCK_MODE
-        ? { full_name: "Demo User", email: "demo@theledger.app" }
-        : await getUserProfile();
+      let exportTxns = allTxns;
+      if (reportType === "Personal") exportTxns = allTxns.filter((t) => !t.is_invoicable);
+      if (reportType === "Billable") exportTxns = allTxns.filter((t) => t.is_invoicable);
 
-      let exportTxns = filteredTxns;
-      if (reportType === "Personal") exportTxns = filteredTxns.filter((t) => !t.is_invoicable);
-      if (reportType === "Billable") exportTxns = filteredTxns.filter((t) => t.is_invoicable);
+      const label = from && to
+        ? `${format(parseISO(from), "dd MMM yyyy")} – ${format(parseISO(to), "dd MMM yyyy")}`
+        : "Custom Range";
 
       await downloadExpensesPDF(
         exportTxns,
         categories,
-        periodLabel,
-        profile?.full_name ?? "User",
-        profile?.email ?? "",
+        label,
+        userProfile?.full_name ?? "User",
+        userProfile?.email ?? "",
         reportType
       );
     } catch (err) {
@@ -440,7 +209,7 @@ export default function AnalyticsPage() {
     } finally {
       setPdfLoading(null);
     }
-  }, [filteredTxns, categories, period, pdfLoading]);
+  }, [allTxns, categories, userProfile, pdfLoading]);
 
   return (
     <PageTransition className="min-h-screen bg-background pb-36 lg:pb-16">
@@ -458,57 +227,23 @@ export default function AnalyticsPage() {
               {appMode === "ALLOWANCE" ? "Spending Insights" : "Analytics"}
             </h1>
             <p className="text-[13px] font-medium text-muted-foreground mt-1">
-              {loading
-                ? <span className="inline-block h-3 w-28 rounded bg-border/40 animate-pulse" />
-                : `${filteredTxns.length} transactions`}
+              {allTxns.length} transactions
             </p>
           </div>
         </div>
 
-        {/* Period tabs */}
-        <div className="flex gap-2 flex-wrap">
-          {PERIODS.map((p) => (
-            <button
-              key={p.value}
-              onClick={() => setPeriod(p.value)}
-              className={cn(
-                "px-4 py-2 rounded-[1rem] text-[13px] font-semibold border transition-all",
-                period === p.value
-                  ? "gradient-primary text-white border-transparent glow-primary shadow-lg"
-                  : "bg-white dark:bg-[#1a1a2e] text-muted-foreground border-border/50 dark:border-white/10 hover:border-primary/30 shadow-sm"
-              )}
-            >
-              {p.label}
-            </button>
-          ))}
-
-          <button
-            onClick={openSheet}
-            className={cn(
-              "px-4 py-2 rounded-[1rem] text-[13px] font-semibold border transition-all flex items-center gap-1.5",
-              period === "custom"
-                ? "gradient-primary text-white border-transparent glow-primary shadow-lg"
-                : "bg-white dark:bg-[#1a1a2e] text-muted-foreground border-border/50 dark:border-white/10 hover:border-primary/30 shadow-sm"
-            )}
-          >
-            <CalendarIcon className="h-3.5 w-3.5 flex-shrink-0" />
-            {period === "custom" && customRange?.from && customRange?.to
-              ? `${format(customRange.from, "MMM d")} – ${format(customRange.to, "MMM d")}`
-              : "Custom"}
-          </button>
-        </div>
+        {/* Date Range Picker */}
+        <DateRangePicker from={from} to={to} />
       </div>
 
-      {loading ? (
-        <AnalyticsSkeleton appMode={appMode} />
-      ) : (appMode === "INVOICE" ? isEmpty : isAllowanceEmpty) ? (
+      {(appMode === "INVOICE" ? isEmpty : isAllowanceEmpty) ? (
         <div className="px-5 flex flex-col items-center justify-center py-24 text-center">
           <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center mb-5">
             <TrendingUp className="h-9 w-9 text-primary/30" />
           </div>
           <p className="text-foreground font-semibold text-[17px]">No data for this period</p>
           <p className="text-muted-foreground text-[13px] mt-1.5">
-            Add some transactions to see your analytics
+            Select a different date range or add some transactions
           </p>
         </div>
       ) : (
@@ -529,7 +264,7 @@ export default function AnalyticsPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleExportPDF("Total")}
-                    disabled={pdfLoading !== null || loading}
+                    disabled={pdfLoading !== null}
                     title="Download total expense report"
                     className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/20 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-500/30 border border-blue-200 dark:border-blue-500/30 transition-colors disabled:opacity-50"
                   >
@@ -560,10 +295,10 @@ export default function AnalyticsPage() {
                   </div>
                   <button
                     onClick={() => handleExportPDF("Total")}
-                    disabled={pdfLoading !== null || loading}
+                    disabled={pdfLoading !== null}
                     className={cn(
                       "mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-[0.75rem] text-[11px] font-semibold transition-all border border-blue-200 dark:border-blue-500/30",
-                      pdfLoading !== null || loading
+                      pdfLoading !== null
                         ? "bg-muted text-muted-foreground cursor-not-allowed"
                         : "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20"
                     )}
@@ -585,7 +320,7 @@ export default function AnalyticsPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleExportPDF("Billable")}
-                        disabled={pdfLoading !== null || loading}
+                        disabled={pdfLoading !== null}
                         title="Download billable expense report"
                         className="w-8 h-8 rounded-full bg-violet-50 dark:bg-violet-500/20 flex items-center justify-center hover:bg-violet-100 dark:hover:bg-violet-500/30 transition-colors disabled:opacity-50"
                       >
@@ -597,14 +332,14 @@ export default function AnalyticsPage() {
                   </div>
                   <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(billableTotal)}</p>
                   <p className="text-[12px] font-medium text-muted-foreground mt-1">
-                    {filteredTxns.filter((t) => t.is_invoicable).length} txns
+                    {allTxns.filter((t) => t.is_invoicable).length} txns
                   </p>
                   <button
                     onClick={() => handleExportPDF("Billable")}
-                    disabled={pdfLoading !== null || loading}
+                    disabled={pdfLoading !== null}
                     className={cn(
                       "mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-[0.75rem] text-[11px] font-semibold transition-all",
-                      pdfLoading !== null || loading
+                      pdfLoading !== null
                         ? "bg-muted text-muted-foreground cursor-not-allowed"
                         : "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-500/20"
                     )}
@@ -622,7 +357,7 @@ export default function AnalyticsPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleExportPDF("Personal")}
-                        disabled={pdfLoading !== null || loading}
+                        disabled={pdfLoading !== null}
                         title="Download personal expense report"
                         className="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-500/20 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-500/30 transition-colors disabled:opacity-50"
                       >
@@ -634,14 +369,14 @@ export default function AnalyticsPage() {
                   </div>
                   <p className="text-[20px] font-bold text-foreground leading-none">{formatCurrency(personalTotal)}</p>
                   <p className="text-[12px] font-medium text-muted-foreground mt-1">
-                    {filteredTxns.filter((t) => !t.is_invoicable).length} txns
+                    {allTxns.filter((t) => !t.is_invoicable).length} txns
                   </p>
                   <button
                     onClick={() => handleExportPDF("Personal")}
-                    disabled={pdfLoading !== null || loading}
+                    disabled={pdfLoading !== null}
                     className={cn(
                       "mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-[0.75rem] text-[11px] font-semibold transition-all",
-                      pdfLoading !== null || loading
+                      pdfLoading !== null
                         ? "bg-muted text-muted-foreground cursor-not-allowed"
                         : "bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 hover:bg-pink-100 dark:hover:bg-pink-500/20"
                     )}
@@ -716,10 +451,10 @@ export default function AnalyticsPage() {
                     </div>
                     <button
                       onClick={() => handleExportPDF("Personal")}
-                      disabled={pdfLoading !== null || loading}
+                      disabled={pdfLoading !== null}
                       className={cn(
                         "flex items-center gap-2 px-4 py-2.5 rounded-[1rem] text-[13px] font-semibold transition-all flex-shrink-0 ml-3",
-                        pdfLoading !== null || loading
+                        pdfLoading !== null
                           ? "bg-muted text-muted-foreground cursor-not-allowed"
                           : "gradient-primary text-white glow-primary shadow-md hover:opacity-90"
                       )}
@@ -814,7 +549,6 @@ export default function AnalyticsPage() {
               <p className="text-[15px] font-bold text-foreground mb-0.5">By Category</p>
               <p className="text-[12px] font-medium text-muted-foreground mb-4">Top spending categories</p>
 
-              {/* Donut centered + list below on mobile, side-by-side on sm+ */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="relative w-[140px] h-[140px] mx-auto sm:mx-0 flex-shrink-0">
                   <ResponsiveContainer width="100%" height="100%">
@@ -873,242 +607,9 @@ export default function AnalyticsPage() {
               </div>
             </div>
           )}
-
-          {/* ── Status Overview (Invoice Mode Only) ── */}
-          {appMode === "INVOICE" && (
-            <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
-              <p className="text-[15px] font-bold text-foreground mb-0.5">Status Overview</p>
-              <p className="text-[12px] font-medium text-muted-foreground mb-4">
-                Billable transactions only
-              </p>
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                {[
-                  {
-                    label: "Pending",
-                    sublabel: "awaiting invoice",
-                    amount: statusData.pending,
-                    count: statusData.pendingCount,
-                    icon: Clock,
-                    bg: "bg-amber-50 dark:bg-amber-500/20",
-                    text: "text-amber-600 dark:text-amber-400",
-                  },
-                  {
-                    label: "Invoiced",
-                    sublabel: "on open invoice",
-                    amount: statusData.invoiced,
-                    count: statusData.invoicedCount,
-                    icon: FileCheck,
-                    bg: "bg-indigo-50 dark:bg-indigo-500/20",
-                    text: "text-indigo-600 dark:text-indigo-400",
-                  },
-                  {
-                    label: "Settled",
-                    sublabel: "paid by parent",
-                    amount: statusData.settled,
-                    count: statusData.settledCount,
-                    icon: CheckCircle2,
-                    bg: "bg-emerald-50 dark:bg-emerald-500/20",
-                    text: "text-emerald-600 dark:text-emerald-400",
-                  },
-                ].map(({ label, sublabel, amount, count, icon: Icon, bg, text }) => (
-                  <div key={label} className={cn("rounded-[1.25rem] p-3 sm:p-3.5", bg)}>
-                    <div className="w-7 h-7 rounded-full bg-white dark:bg-[#1a1a2e] flex items-center justify-center mb-2 shadow-sm">
-                      <Icon className={cn("h-3.5 w-3.5", text)} />
-                    </div>
-                    <p className={cn("text-[10px] sm:text-[11px] font-bold uppercase tracking-wider leading-none mb-1.5", text)}>
-                      {label}
-                    </p>
-                    <p className="text-[13px] sm:text-[15px] font-bold text-foreground leading-none">
-                      {formatCurrency(amount)}
-                    </p>
-                    <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground mt-1">
-                      {count} txn{count !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Top Transactions ── */}
-          {topTxns.length > 0 && (
-            <div className="p-4 sm:p-5 rounded-[1.5rem] bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-[15px] font-bold text-foreground">Biggest Expenses</p>
-                  <p className="text-[12px] font-medium text-muted-foreground mt-0.5">Top 5 by amount</p>
-                </div>
-                <Link
-                  href="/expenses"
-                  className="flex items-center gap-1 text-[12px] font-bold text-primary hover:underline"
-                >
-                  View all
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-
-              <div className="space-y-3">
-                {topTxns.map((txn, i) => {
-                  const cat = getCategoryById(categories, txn.category_id);
-                  const pct = totalSpend > 0 ? (txn.amount / totalSpend) * 100 : 0;
-                  return (
-                    <div key={txn.id} className="flex items-center gap-3">
-                      {/* Rank */}
-                      <span className="text-[12px] font-bold text-muted-foreground w-4 flex-shrink-0 text-right">
-                        {i + 1}
-                      </span>
-
-                      {/* Color dot */}
-                      <div
-                        className="w-8 h-8 rounded-[0.75rem] flex-shrink-0 flex items-center justify-center"
-                        style={{ backgroundColor: `${cat?.color ?? "#10b981"}18` }}
-                      >
-                        <div
-                          className="w-2.5 h-2.5 rounded-full"
-                          style={{ backgroundColor: cat?.color ?? "#10b981" }}
-                        />
-                      </div>
-
-                      {/* Description + bar */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <p className="text-[13px] font-semibold text-foreground truncate leading-none">
-                            {txn.description}
-                          </p>
-                          {/* Personal / Billable pill - INVOICE MODE ONLY */}
-                          {appMode === "INVOICE" && (
-                            <span
-                              className={cn(
-                                "inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide flex-shrink-0",
-                                txn.is_invoicable
-                                  ? "bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400"
-                                  : "bg-muted/60 text-muted-foreground"
-                              )}
-                            >
-                              {txn.is_invoicable ? "Billable" : "Personal"}
-                            </span>
-                          )}
-                        </div>
-                        <div className="h-1 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className="h-full rounded-full"
-                            style={{ width: `${pct}%`, backgroundColor: cat?.color ?? "#10b981" }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Amount */}
-                      <span className="text-[14px] font-bold font-mono text-foreground flex-shrink-0">
-                        {formatCurrency(txn.amount)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
         </div>
       )}
-
       <BottomNav />
-
-      {/* ── Date Range Bottom Sheet ── */}
-      {sheetOpen && (
-        <>
-          {/* Scrim */}
-          <div
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
-            onClick={() => setSheetOpen(false)}
-          />
-
-          {/* Sheet — bottom sheet on mobile, centered modal on desktop */}
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#12122a] rounded-t-[2rem] shadow-2xl border-t border-border/20 dark:border-white/10 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm sm:rounded-[2rem] sm:border">
-            {/* Drag handle — mobile only */}
-            <div className="flex justify-center pt-3 pb-1 sm:hidden">
-              <div className="w-10 h-1 rounded-full bg-border/60 dark:bg-white/20" />
-            </div>
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3 sm:pt-5">
-              <h3 className="text-[17px] font-bold text-foreground">Date Range</h3>
-              <button
-                onClick={() => setSheetOpen(false)}
-                className="w-8 h-8 rounded-full bg-secondary dark:bg-white/10 flex items-center justify-center"
-              >
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </div>
-
-            {/* Quick presets */}
-            <div className="px-5 pb-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2.5">Quick select</p>
-              <div className="grid grid-cols-2 gap-2">
-                {DATE_PRESETS.map((preset) => {
-                  const isActive =
-                    period === "custom" &&
-                    customRange?.from?.toDateString() === preset.from.toDateString() &&
-                    customRange?.to?.toDateString() === preset.to.toDateString();
-                  return (
-                    <button
-                      key={preset.label}
-                      onClick={() => applyPreset(preset.from, preset.to)}
-                      className={cn(
-                        "py-2.5 px-3 rounded-[0.875rem] text-[13px] font-semibold border text-left transition-all",
-                        isActive
-                          ? "gradient-primary text-white border-transparent shadow-md"
-                          : "bg-secondary/60 dark:bg-white/5 border-border/40 dark:border-white/10 text-foreground hover:border-primary/40"
-                      )}
-                    >
-                      {preset.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Divider */}
-            <div className="mx-5 flex items-center gap-3 mb-2">
-              <div className="flex-1 h-px bg-border/40 dark:bg-white/10" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">or pick dates</span>
-              <div className="flex-1 h-px bg-border/40 dark:bg-white/10" />
-            </div>
-
-            {/* Calendar */}
-            <div className="px-3">
-              <Calendar
-                mode="range"
-                selected={pendingRange}
-                onSelect={setPendingRange}
-                numberOfMonths={1}
-                className="!p-2 w-full"
-              />
-            </div>
-
-            {/* Footer */}
-            <div className="px-5 pb-8 pt-2 flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                {pendingRange?.from && pendingRange?.to ? (
-                  <p className="text-[13px] font-semibold text-foreground truncate">
-                    {format(pendingRange.from, "MMM d, yyyy")} – {format(pendingRange.to, "MMM d, yyyy")}
-                  </p>
-                ) : pendingRange?.from ? (
-                  <p className="text-[13px] text-muted-foreground">Select end date…</p>
-                ) : (
-                  <p className="text-[13px] text-muted-foreground">Select a start date</p>
-                )}
-              </div>
-              <button
-                onClick={applyPendingRange}
-                disabled={!pendingRange?.from || !pendingRange?.to}
-                className="px-5 py-2.5 rounded-[1rem] text-[13px] font-bold gradient-primary text-white disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0 transition-opacity"
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        </>
-      )}
     </PageTransition>
   );
 }
