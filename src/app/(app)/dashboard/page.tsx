@@ -58,7 +58,7 @@ export default async function DashboardPage() {
             <div className="flex items-center gap-3 self-end md:self-auto">
               <Link
                 href="/settings"
-                className="flex items-center gap-3 bg-white dark:bg-[#1a1a2e] pl-2 pr-4 py-1.5 rounded-full border border-border/40 dark:border-white/10 shadow-sm hover:border-primary/40 hover:shadow-md transition-all"
+                className="flex items-center gap-3 bg-white dark:bg-[#1a1a2e] pl-2 pr-4 py-1.5 rounded-full border border-border/40 dark:border-white/10 shadow-sm hover:border-primary/40 hover:shadow-md transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.97]"
               >
                 <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: "rgba(99,102,241,0.12)", color: "#6366f1" }}>
                   {firstName[0]}
@@ -72,7 +72,7 @@ export default async function DashboardPage() {
 
           {/* Controls Toolbar */}
           <div className="flex items-center justify-end gap-3 px-4 sm:px-6 md:px-10 mb-5">
-            <Link href="/add" className="flex items-center gap-2 px-5 py-2.5 text-white rounded-full text-sm font-semibold transition-all shadow-[0_4px_12px_rgba(99,102,241,0.3)] hover:opacity-90" style={{ backgroundColor: "#6366f1" }}>
+            <Link href="/add" className="flex items-center gap-2 px-5 py-2.5 text-white rounded-full text-sm font-semibold transition-[opacity,transform,box-shadow] duration-150 shadow-[0_4px_12px_rgba(99,102,241,0.3)] hover:opacity-90 active:scale-[0.97] active:shadow-[0_2px_6px_rgba(99,102,241,0.2)]" style={{ backgroundColor: "#6366f1" }}>
               <Plus className="w-4 h-4" />
               <span>Add</span>
             </Link>
@@ -82,7 +82,7 @@ export default async function DashboardPage() {
           
           {/* Mobile Settings Link */}
           <div className="lg:hidden px-4 sm:px-6 md:px-10 mt-8 mb-5 flex justify-center">
-             <Link href="/settings" className="px-6 py-3 bg-white/50 dark:bg-[#1a1a2e]/50 rounded-full text-[14px] font-bold border border-border/40 dark:border-white/10 text-muted-foreground flex items-center gap-2 hover:bg-white dark:hover:bg-[#1a1a2e] transition-colors shadow-sm">
+             <Link href="/settings" className="px-6 py-3 bg-white/50 dark:bg-[#1a1a2e]/50 rounded-full text-[14px] font-bold border border-border/40 dark:border-white/10 text-muted-foreground flex items-center gap-2 hover:bg-white dark:hover:bg-[#1a1a2e] transition-[background-color,transform] duration-150 active:scale-[0.97] shadow-sm">
                <Settings className="w-4 h-4" />
                App Settings
              </Link>
@@ -119,7 +119,7 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-3 self-end md:self-auto">
           <Link
             href="/settings"
-            className="flex items-center gap-3 bg-white dark:bg-[#1a1a2e] pl-2 pr-4 py-1.5 rounded-full border border-border/40 dark:border-white/10 shadow-sm hover:border-primary/40 hover:shadow-md transition-all"
+            className="flex items-center gap-3 bg-white dark:bg-[#1a1a2e] pl-2 pr-4 py-1.5 rounded-full border border-border/40 dark:border-white/10 shadow-sm hover:border-primary/40 hover:shadow-md transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.97]"
           >
             <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm" style={{ backgroundColor: 'rgba(99,102,241,0.12)', color: '#6366f1' }}>
               {firstName[0]}
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
             <Calendar className="w-4 h-4 text-muted-foreground" />
             <span>This month</span>
           </div>
-          <Link href="/add" className="flex items-center gap-2 px-5 py-2.5 text-white rounded-full text-sm font-semibold transition-all shadow-[0_4px_12px_rgba(99,102,241,0.3)] hover:opacity-90" style={{ backgroundColor: '#6366f1' }}>
+          <Link href="/add" className="flex items-center gap-2 px-5 py-2.5 text-white rounded-full text-sm font-semibold transition-[opacity,transform,box-shadow] duration-150 shadow-[0_4px_12px_rgba(99,102,241,0.3)] hover:opacity-90 active:scale-[0.97] active:shadow-[0_2px_6px_rgba(99,102,241,0.2)]" style={{ backgroundColor: '#6366f1' }}>
             <Plus className="w-4 h-4" />
             <span>Add</span>
           </Link>
@@ -150,29 +150,29 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-3 gap-3 sm:gap-5">
           {/* Card 1: Total Spend */}
           <div className="bg-white dark:bg-[#1a1a2e] p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 dark:border-white/10 shadow-sm relative group">
-            <Link href="/analytics" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 dark:group-hover:bg-white/10 transition-colors">
+            <Link href="/analytics" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 dark:group-hover:bg-white/10 transition-[background-color,transform] duration-150 active:scale-[0.9]">
               <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
-            <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Total Spend</h3>
-            <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-4 leading-none">
+            <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground mb-1.5 sm:mb-3">Total spend</p>
+            <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-3 leading-none">
               <AnimatedCounter
                 value={totalSpend}
                 prefix="R"
                 prefixClassName="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5"
               />
             </p>
-            <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">
-              {currentMonthTxns.length} transaction{currentMonthTxns.length !== 1 ? "s" : ""}
+            <p className="text-[10px] sm:text-[13px] font-medium text-muted-foreground">
+              {currentMonthTxns.length} txn{currentMonthTxns.length !== 1 ? "s" : ""}
             </p>
           </div>
 
           {/* Card 2: Billable */}
           <div className="bg-white dark:bg-[#1a1a2e] p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 dark:border-white/10 shadow-sm relative group">
-            <Link href="/invoices" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 dark:group-hover:bg-white/10 transition-colors">
+            <Link href="/invoices" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 dark:group-hover:bg-white/10 transition-[background-color,transform] duration-150 active:scale-[0.9]">
               <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
-            <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Billable</h3>
-            <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-4 leading-none">
+            <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground mb-1.5 sm:mb-3">Billable</p>
+            <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-3 leading-none">
               <AnimatedCounter
                 value={invoicableTotal}
                 prefix="R"
@@ -180,16 +180,16 @@ export default async function DashboardPage() {
                 prefixClassName="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5"
               />
             </p>
-            <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">Pending invoice</p>
+            <p className="text-[10px] sm:text-[13px] font-medium text-muted-foreground">Pending invoice</p>
           </div>
 
           {/* Card 3: Personal */}
           <div className="bg-white dark:bg-[#1a1a2e] p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-border/40 dark:border-white/10 shadow-sm relative group">
-            <Link href="/expenses" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 dark:group-hover:bg-white/10 transition-colors">
+            <Link href="/expenses" className="absolute top-3 right-3 sm:top-5 sm:right-5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border/60 dark:border-white/10 flex items-center justify-center text-muted-foreground group-hover:bg-muted/50 dark:group-hover:bg-white/10 transition-[background-color,transform] duration-150 active:scale-[0.9]">
               <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
-            <h3 className="font-bold text-[11px] sm:text-[15px] mb-2 sm:mb-4 text-muted-foreground uppercase tracking-wide">Personal</h3>
-            <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-4 leading-none">
+            <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground mb-1.5 sm:mb-3">Personal</p>
+            <p className="text-[16px] sm:text-3xl font-bold tracking-tight mb-1 sm:mb-3 leading-none">
               <AnimatedCounter
                 value={personalTotal}
                 prefix="R"
@@ -197,7 +197,7 @@ export default async function DashboardPage() {
                 prefixClassName="text-[11px] sm:text-[20px] text-muted-foreground font-semibold pr-0.5"
               />
             </p>
-            <p className="text-[10px] sm:text-[13px] font-semibold text-muted-foreground hidden sm:block">{personalTxns.length} transaction{personalTxns.length !== 1 ? "s" : ""}</p>
+            <p className="text-[10px] sm:text-[13px] font-medium text-muted-foreground">{personalTxns.length} txn{personalTxns.length !== 1 ? "s" : ""}</p>
           </div>
         </div>
 
@@ -228,7 +228,7 @@ export default async function DashboardPage() {
             <div className="bg-white dark:bg-[#1a1a2e] px-4 sm:px-6 py-5 rounded-[2rem] border border-border/40 dark:border-white/10 shadow-sm">
               <div className="flex justify-between items-center mb-5">
                 <h2 className="text-lg font-bold">Recent transactions</h2>
-                <Link href="/expenses" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 dark:bg-white/10 rounded-full text-sm font-semibold hover:bg-muted/50 dark:hover:bg-white/10 transition-colors">
+                <Link href="/expenses" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 dark:bg-white/10 rounded-full text-sm font-semibold hover:bg-muted/50 dark:hover:bg-white/10 transition-[background-color,transform] duration-150 active:scale-[0.97]">
                   See all <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

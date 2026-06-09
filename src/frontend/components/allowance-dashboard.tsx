@@ -75,8 +75,8 @@ export function AllowanceDashboard({ data, firstName }: Props) {
         <div className="absolute top-0 right-0 w-40 h-40 rounded-full opacity-10 bg-white translate-x-10 -translate-y-10" />
         <div className="absolute bottom-0 left-0 w-28 h-28 rounded-full opacity-10 bg-white -translate-x-8 translate-y-8" />
 
-        <p className="text-white/70 text-[13px] font-bold uppercase tracking-widest mb-2">
-          Safe to Spend
+        <p className="text-white/70 text-[13px] font-semibold mb-2">
+          Safe to spend
         </p>
         <p className="text-white text-[42px] sm:text-[52px] font-black tracking-tight leading-none">
           <AnimatedCounter
@@ -97,7 +97,7 @@ export function AllowanceDashboard({ data, firstName }: Props) {
           </div>
           <div className="h-2 rounded-full bg-white/20 overflow-hidden">
             <div
-              className={cn("h-full rounded-full bg-gradient-to-r transition-all duration-700", runwayColor)}
+              className={cn("h-full rounded-full bg-gradient-to-r transition-[width] duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]", runwayColor)}
               style={{ width: `${spendPct}%` }}
             />
           </div>
@@ -115,7 +115,7 @@ export function AllowanceDashboard({ data, firstName }: Props) {
             <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center mb-2", bgClass)}>
               <Icon className={cn("w-4 h-4", colorClass)} />
             </div>
-            <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-wide mb-1">{label}</p>
+            <p className="text-muted-foreground text-[10px] font-medium mb-1">{label}</p>
             <p className="text-foreground text-[15px] sm:text-[18px] font-bold leading-none font-mono">
               R{(value / 1000).toFixed(1)}k
             </p>
@@ -155,8 +155,8 @@ export function AllowanceDashboard({ data, firstName }: Props) {
         {/* Recent Transactions */}
         <div className={cn("bg-white dark:bg-[#1a1a2e] px-4 sm:px-6 py-5 rounded-[2rem] border border-border/40 dark:border-white/10 shadow-sm", upcomingDebits.length > 0 ? "lg:col-span-2" : "lg:col-span-3")}>
           <div className="flex justify-between items-center mb-5">
-            <h2 className="text-[15px] font-bold">Recent Transactions</h2>
-            <Link href="/expenses" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 dark:bg-white/10 rounded-full text-sm font-semibold hover:bg-muted/50 transition-colors">
+            <h2 className="text-[15px] font-bold">Recent transactions</h2>
+            <Link href="/expenses" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/30 dark:bg-white/10 rounded-full text-sm font-semibold hover:bg-muted/50 transition-[background-color,transform] duration-150 active:scale-[0.97]">
               See all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>

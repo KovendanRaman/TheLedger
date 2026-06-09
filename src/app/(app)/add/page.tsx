@@ -66,13 +66,18 @@ export default function AddTransactionPage() {
 
     startTransition(async () => {
       try {
+        const categoryColor = categories.find(c => c.id === categoryId)?.color ?? "#6366f1";
+        const toastStyle = { borderLeft: `3px solid ${categoryColor}` };
         if (IS_MOCK_MODE) {
-            toast.success("Expense added! (Mock)");
+            toast.success("Expense logged", { description: `R${parseFloat(amount).toFixed(2)} · ${description}`, style: toastStyle });
             router.push("/dashboard");
             return;
         }
         await addTransaction(fd);
-        toast.success("Expense logged! 💸");
+        toast.success("Expense logged", {
+          description: `R${parseFloat(amount).toFixed(2)} · ${description}${isInvoicable ? " · Queued for invoice" : ""}`,
+          style: toastStyle,
+        });
         router.push("/dashboard");
       } catch (err: unknown) {
         toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -90,8 +95,9 @@ export default function AddTransactionPage() {
 
     startTransition(async () => {
       try {
+        const incomeStyle = { borderLeft: "3px solid #10b981" };
         if (IS_MOCK_MODE) {
-            toast.success("Income added! (Mock)");
+            toast.success("Income recorded", { description: `R${parseFloat(incAmount).toFixed(2)} · ${incSource}`, style: incomeStyle });
             router.push("/dashboard");
             return;
         }
@@ -100,7 +106,10 @@ export default function AddTransactionPage() {
             toast.error(error);
             return;
         }
-        toast.success("Income logged! 💰");
+        toast.success("Income recorded", {
+          description: `R${parseFloat(incAmount).toFixed(2)} · ${incSource}${incRecurring ? " · Recurring" : ""}`,
+          style: incomeStyle,
+        });
         router.push("/dashboard");
       } catch (err: unknown) {
         toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -222,14 +231,25 @@ export default function AddTransactionPage() {
             <>
               <label
                 htmlFor="is_invoicable"
-                className="flex items-center justify-between p-4 mt-2 rounded-[1.25rem] border border-border/50 dark:border-white/10 bg-white dark:bg-[#1a1a2e] shadow-sm cursor-pointer select-none"
+                className={cn(
+                  "flex items-center justify-between p-4 mt-2 rounded-[1.25rem] border shadow-sm cursor-pointer select-none transition duration-200 active:scale-[0.99]",
+                  isInvoicable
+                    ? "border-primary/30 bg-primary/5 dark:bg-primary/10"
+                    : "border-border/50 dark:border-white/10 bg-white dark:bg-[#1a1a2e]"
+                )}
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-2.5 rounded-xl bg-primary/10">
+                  <div className={cn(
+                    "p-2.5 rounded-xl transition-colors duration-200",
+                    isInvoicable ? "bg-primary/20" : "bg-primary/10"
+                  )}>
                     <Receipt className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-[15px] font-bold text-foreground">
+                    <p className={cn(
+                      "text-[15px] font-bold transition-colors duration-200",
+                      isInvoicable ? "text-primary" : "text-foreground"
+                    )}>
                       Bill to Parent
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -244,12 +264,17 @@ export default function AddTransactionPage() {
                 />
               </label>
 
-              {isInvoicable && (
-                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20 text-[13px] text-primary font-medium">
-                  <Receipt className="h-4 w-4 flex-shrink-0" />
-                  This expense will appear on your next parent statement.
+              <div className={cn(
+                "grid transition-[grid-template-rows,opacity] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
+                isInvoicable ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+              )}>
+                <div className="overflow-hidden">
+                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20 text-[13px] text-primary font-medium">
+                    <Receipt className="h-4 w-4 flex-shrink-0" />
+                    This expense will appear on your next parent statement.
+                  </div>
                 </div>
-              )}
+              </div>
             </>
           )}
 

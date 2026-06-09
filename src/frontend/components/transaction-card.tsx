@@ -7,7 +7,7 @@ import { CategoryBadge } from "@/frontend/components/category-badge";
 import type { Transaction } from "@/backend/lib/types/database.types";
 import { Receipt, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { motion, useMotionValue, type PanInfo } from "framer-motion";
+import { motion, useMotionValue, useTransform, type PanInfo } from "framer-motion";
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -22,8 +22,8 @@ export const TransactionCard = memo(function TransactionCard({
 }: TransactionCardProps) {
   const category = transaction.categories;
   const x = useMotionValue(0);
+  const actionOpacity = useTransform(x, [0, -20], [0, 1], { clamp: true });
   const [swiped, setSwiped] = useState(false);
-  const [dragging, setDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -34,15 +34,9 @@ export const TransactionCard = memo(function TransactionCard({
   }, []);
 
   const actionWidth = onDelete ? -128 : -64;
-  const showActions = dragging || swiped;
-
-  function handleDragStart() {
-    setDragging(true);
-  }
 
   function handleDragEnd(_: unknown, info: PanInfo) {
-    setDragging(false);
-    if (info.offset.x < SWIPE_THRESHOLD) {
+    if (info.offset.x < SWIPE_THRESHOLD || info.velocity.x < -300) {
       setSwiped(true);
     } else {
       setSwiped(false);
@@ -51,24 +45,27 @@ export const TransactionCard = memo(function TransactionCard({
 
   return (
     <div className="relative overflow-hidden rounded-[1.25rem] bg-white dark:bg-[#1a1a2e]">
-      {/* Actions revealed behind the card — only when actively swiping */}
-      {isMobile && showActions && (
-        <div className="absolute inset-y-0 right-0 flex items-stretch z-0">
+      {/* Actions — opacity driven by x motion value, invisible at rest */}
+      {isMobile && (
+        <motion.div
+          style={{ opacity: actionOpacity }}
+          className="absolute inset-y-0 right-0 flex items-stretch z-0"
+        >
           <Link
             href={`/expenses/${transaction.id}/edit`}
-            className="flex items-center justify-center w-16 bg-primary text-white transition-colors hover:bg-primary/90"
+            className="flex items-center justify-center w-16 bg-primary text-white transition-[filter,transform] duration-150 active:brightness-90 active:scale-[0.97]"
           >
             <Pencil className="h-5 w-5" />
           </Link>
           {onDelete && (
             <button
               onClick={() => onDelete(transaction.id)}
-              className="flex items-center justify-center w-16 bg-red-500 text-white transition-colors hover:bg-red-600"
+              className="flex items-center justify-center w-16 bg-red-500 text-white transition-[filter,transform] duration-150 active:brightness-90 active:scale-[0.97]"
             >
               <Trash2 className="h-5 w-5" />
             </button>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Swipeable card surface */}
@@ -76,11 +73,10 @@ export const TransactionCard = memo(function TransactionCard({
         drag={isMobile ? "x" : false}
         dragDirectionLock
         dragConstraints={{ left: actionWidth, right: 0 }}
-        dragElastic={0.15}
-        onDragStart={handleDragStart}
+        dragElastic={0.08}
         onDragEnd={handleDragEnd}
         animate={{ x: swiped ? actionWidth : 0 }}
-        transition={{ type: "spring", stiffness: 400, damping: 35 }}
+        transition={{ type: "spring", duration: 0.35, bounce: 0 }}
         style={{ x }}
         onTap={() => swiped && setSwiped(false)}
         className="relative z-10 flex items-center gap-4 p-4 bg-white dark:bg-[#1a1a2e] border border-white dark:border-[#1a1a2e] shadow-sm hover:shadow-md transition-shadow group touch-pan-y md:border-border/40 md:dark:border-white/10"
@@ -133,7 +129,7 @@ export const TransactionCard = memo(function TransactionCard({
           </span>
           <Link
             href={`/expenses/${transaction.id}/edit`}
-            className="mt-0.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border border-border/60 dark:border-white/10 text-muted-foreground bg-white dark:bg-[#1a1a2e] shadow-sm hover:border-primary hover:text-primary hover:shadow-primary/20 hover:shadow-md transition-all"
+            className="mt-0.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border border-border/60 dark:border-white/10 text-muted-foreground bg-white dark:bg-[#1a1a2e] shadow-sm hover:border-primary hover:text-primary hover:shadow-primary/20 hover:shadow-md transition-[color,border-color,box-shadow] duration-150"
             title="Edit transaction"
           >
             <Pencil className="h-3 w-3" />

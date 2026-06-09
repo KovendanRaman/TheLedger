@@ -472,7 +472,7 @@ export default function AnalyticsPage() {
               key={p.value}
               onClick={() => setPeriod(p.value)}
               className={cn(
-                "px-4 py-2 rounded-[1rem] text-[13px] font-semibold border transition-all",
+                "px-4 py-2 rounded-[1rem] text-[13px] font-semibold border transition-[background-color,border-color,color,box-shadow] duration-150 active:scale-[0.97]",
                 period === p.value
                   ? "gradient-primary text-white border-transparent glow-primary shadow-lg"
                   : "bg-white dark:bg-[#1a1a2e] text-muted-foreground border-border/50 dark:border-white/10 hover:border-primary/30 shadow-sm"
@@ -485,7 +485,7 @@ export default function AnalyticsPage() {
           <button
             onClick={openSheet}
             className={cn(
-              "px-4 py-2 rounded-[1rem] text-[13px] font-semibold border transition-all flex items-center gap-1.5",
+              "px-4 py-2 rounded-[1rem] text-[13px] font-semibold border transition-[background-color,border-color,color,box-shadow] duration-150 active:scale-[0.97] flex items-center gap-1.5",
               period === "custom"
                 ? "gradient-primary text-white border-transparent glow-primary shadow-lg"
                 : "bg-white dark:bg-[#1a1a2e] text-muted-foreground border-border/50 dark:border-white/10 hover:border-primary/30 shadow-sm"
@@ -547,7 +547,7 @@ export default function AnalyticsPage() {
                 <>
                   <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all duration-700"
+                      className="h-full rounded-full transition-[width] duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]"
                       style={{
                         width: `${billablePct}%`,
                         background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
@@ -862,7 +862,7 @@ export default function AnalyticsPage() {
                         </div>
                         <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                           <div
-                            className="h-full rounded-full transition-all duration-700"
+                            className="h-full rounded-full transition-[width] duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]"
                             style={{ width: `${pct}%`, backgroundColor: cat.color }}
                           />
                         </div>
@@ -991,7 +991,7 @@ export default function AnalyticsPage() {
                         </div>
                         <div className="h-1 rounded-full bg-muted overflow-hidden">
                           <div
-                            className="h-full rounded-full"
+                            className="h-full rounded-full transition-[width] duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]"
                             style={{ width: `${pct}%`, backgroundColor: cat?.color ?? "#10b981" }}
                           />
                         </div>
@@ -1018,12 +1018,12 @@ export default function AnalyticsPage() {
         <>
           {/* Scrim */}
           <div
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm [animation:fade-in-overlay_200ms_ease-out]"
             onClick={() => setSheetOpen(false)}
           />
 
-          {/* Sheet — bottom sheet on mobile, centered modal on desktop */}
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#12122a] rounded-t-[2rem] shadow-2xl border-t border-border/20 dark:border-white/10 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm sm:rounded-[2rem] sm:border">
+          {/* Sheet — slides up on mobile, scales in on desktop */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#12122a] rounded-t-[2rem] shadow-2xl border-t border-border/20 dark:border-white/10 [animation:slide-up-sheet_300ms_cubic-bezier(0.32,0.72,0,1)] sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm sm:rounded-[2rem] sm:border sm:[animation:scale-in-modal_200ms_ease-out]">
             {/* Drag handle — mobile only */}
             <div className="flex justify-center pt-3 pb-1 sm:hidden">
               <div className="w-10 h-1 rounded-full bg-border/60 dark:bg-white/20" />
@@ -1054,7 +1054,7 @@ export default function AnalyticsPage() {
                       key={preset.label}
                       onClick={() => applyPreset(preset.from, preset.to)}
                       className={cn(
-                        "py-2.5 px-3 rounded-[0.875rem] text-[13px] font-semibold border text-left transition-all",
+                        "py-2.5 px-3 rounded-[0.875rem] text-[13px] font-semibold border text-left transition-[background-color,border-color,box-shadow] duration-150 active:scale-[0.97]",
                         isActive
                           ? "gradient-primary text-white border-transparent shadow-md"
                           : "bg-secondary/60 dark:bg-white/5 border-border/40 dark:border-white/10 text-foreground hover:border-primary/40"
