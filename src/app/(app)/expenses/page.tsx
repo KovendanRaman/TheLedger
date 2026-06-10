@@ -14,16 +14,6 @@ import {
   Search,
   SlidersHorizontal,
   X,
-  Fuel,
-  ShoppingCart,
-  Utensils,
-  Car,
-  PenTool,
-  Shirt,
-  Home,
-  Gamepad2,
-  MoreHorizontal,
-  Tag,
   LayoutGrid,
   FileText,
   Plus,
@@ -31,23 +21,9 @@ import {
 import Link from "next/link";
 import { cn } from "@/backend/lib/utils";
 import { format } from "date-fns";
+import { getCategoryIcon } from "@/frontend/components/category-icon";
 
 const PAGE_SIZE = 50;
-
-function getCategoryIcon(name: string) {
-  switch (name.toLowerCase()) {
-    case "fuel": return Fuel;
-    case "groceries": return ShoppingCart;
-    case "fast food": return Utensils;
-    case "transport": return Car;
-    case "stationery": return PenTool;
-    case "clothing": return Shirt;
-    case "accommodation": return Home;
-    case "entertainment": return Gamepad2;
-    case "other": return MoreHorizontal;
-    default: return Tag;
-  }
-}
 
 const STATUS_TABS: { label: string; value: TransactionStatus | "all" }[] = [
   { label: "All", value: "all" },

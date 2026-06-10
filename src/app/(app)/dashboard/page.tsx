@@ -12,8 +12,9 @@ import {
   MOCK_CATEGORIES,
 } from "@/backend/lib/mock-data";
 import type { Transaction } from "@/backend/lib/types/database.types";
-import { Calendar, Plus, ArrowUpRight, Wallet, ArrowRight, Settings, FileText, ReceiptText } from "lucide-react";
+import { Calendar, Plus, ArrowUpRight, ArrowRight, Settings, FileText, ReceiptText } from "lucide-react";
 import { CategoryBadge } from "@/frontend/components/category-badge";
+import { CategoryIcon } from "@/frontend/components/category-icon";
 import { AnimatedCounter } from "@/frontend/components/animated-counter";
 import Link from "next/link";
 import { format, parseISO, isSameMonth } from "date-fns";
@@ -305,12 +306,7 @@ export default async function DashboardPage() {
                       const dateLabel = format(parseISO((txn.date || txn.created_at).split("T")[0]), "dd MMM");
                       return (
                         <div key={txn.id} className="flex items-center gap-3 py-3 border-b border-border/20 dark:border-white/5 last:border-0">
-                          <div
-                            className="w-10 h-10 rounded-[0.75rem] flex items-center justify-center flex-shrink-0"
-                            style={{ backgroundColor: category?.color ? `${category.color}18` : "#6366f118" }}
-                          >
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category?.color ?? "#6366f1" }} />
-                          </div>
+                          <CategoryIcon name={category?.name} color={category?.color} size="md" />
                           <div className="flex-1 min-w-0">
                             <p className="text-[14px] font-bold text-foreground truncate">{txn.description}</p>
                             <div className="flex items-center gap-2 mt-0.5">
@@ -348,9 +344,7 @@ export default async function DashboardPage() {
                               <td className="py-3.5 px-2 text-[14px] font-bold whitespace-nowrap">R {txn.amount.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</td>
                               <td className="py-3.5 px-2">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-7 h-7 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
-                                    <Wallet className="w-3.5 h-3.5 text-primary" />
-                                  </div>
+                                  <CategoryIcon name={category?.name} color={category?.color} size="sm" />
                                   <span className="text-[14px] font-bold text-foreground truncate max-w-[140px]">{txn.description}</span>
                                 </div>
                               </td>

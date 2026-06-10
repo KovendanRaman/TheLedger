@@ -9,6 +9,7 @@ import {
 } from "@/backend/lib/db/schema";
 import { formatCurrency, formatDate } from "@/backend/lib/utils";
 import { CategoryBadge } from "@/frontend/components/category-badge";
+import { CategoryIcon } from "@/frontend/components/category-icon";
 import { StatusBadge } from "@/frontend/components/status-badge";
 import { BookOpen, ShieldCheck, AlertCircle } from "lucide-react";
 import type { ParentalViewRow } from "@/backend/lib/types/database.types";
@@ -171,15 +172,7 @@ export default async function ParentalViewPage({ params }: Props) {
                         key={row.id}
                         className="flex items-center gap-4 p-4 rounded-[1.25rem] bg-white border border-border/50 shadow-sm"
                       >
-                        <div
-                          className="flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center"
-                          style={{ backgroundColor: row.category_color ? `${row.category_color}15` : "#6366f115" }}
-                        >
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: row.category_color ?? "#6366f1" }}
-                          />
-                        </div>
+                        <CategoryIcon name={row.category_name} color={row.category_color} size="lg" className="w-11 h-11 rounded-2xl" />
                         <div className="flex-1 min-w-0">
                           <p className="text-[15px] font-semibold text-foreground truncate pl-1">
                             {row.description}

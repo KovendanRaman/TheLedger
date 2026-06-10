@@ -3,6 +3,7 @@
 import { format, parseISO } from "date-fns";
 import { formatCurrency } from "@/backend/lib/utils";
 import { CategoryBadge } from "@/frontend/components/category-badge";
+import { CategoryIcon } from "@/frontend/components/category-icon";
 import { AnimatedCounter } from "@/frontend/components/animated-counter";
 import type { AllowanceDashboardData } from "@/backend/lib/types/database.types";
 import { CalendarDays, TrendingDown, ShieldCheck, Wallet, ArrowRight } from "lucide-react";
@@ -170,12 +171,7 @@ export function AllowanceDashboard({ data, firstName }: Props) {
                 const dateLabel = format(parseISO(txn.date.split("T")[0]), "dd MMM");
                 return (
                   <div key={txn.id} className="flex items-center gap-3 py-3 border-b border-border/20 dark:border-white/5 last:border-0">
-                    <div
-                      className="w-10 h-10 rounded-[0.75rem] flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: category?.color ? `${category.color}18` : "#6366f118" }}
-                    >
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category?.color ?? "#6366f1" }} />
-                    </div>
+                    <CategoryIcon name={category?.name} color={category?.color} size="md" />
                     <div className="flex-1 min-w-0">
                       <p className="text-[14px] font-bold text-foreground truncate">{txn.description}</p>
                       {category && <CategoryBadge name={category.name} color={category.color} size="sm" variant="soft" className="shadow-none mt-0.5" />}

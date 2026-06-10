@@ -1,17 +1,6 @@
 import { memo } from "react";
-import {
-  Car,
-  Fuel,
-  Gamepad2,
-  Home,
-  MoreHorizontal,
-  PenTool,
-  Shirt,
-  ShoppingCart,
-  Tag,
-  Utensils,
-} from "lucide-react";
 import { cn } from "@/backend/lib/utils";
+import { getCategoryIcon } from "@/frontend/components/category-icon";
 
 interface CategoryBadgeProps {
   name: string;
@@ -21,31 +10,6 @@ interface CategoryBadgeProps {
    *  "soft" = tinted bg + coloured text + subtle glow */
   variant?: "pill" | "soft";
   className?: string;
-}
-
-function getCategoryIcon(name: string) {
-  switch (name.toLowerCase()) {
-    case "fuel":
-      return Fuel;
-    case "groceries":
-      return ShoppingCart;
-    case "fast food":
-      return Utensils;
-    case "transport":
-      return Car;
-    case "stationery":
-      return PenTool;
-    case "clothing":
-      return Shirt;
-    case "accommodation":
-      return Home;
-    case "entertainment":
-      return Gamepad2;
-    case "other":
-      return MoreHorizontal;
-    default:
-      return Tag;
-  }
 }
 
 export const CategoryBadge = memo(function CategoryBadge({
