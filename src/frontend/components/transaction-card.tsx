@@ -4,6 +4,7 @@ import { memo, useState, useEffect } from "react";
 import { formatCurrency, formatDate } from "@/backend/lib/utils";
 import { StatusBadge } from "@/frontend/components/status-badge";
 import { CategoryBadge } from "@/frontend/components/category-badge";
+import { CategoryIcon } from "@/frontend/components/category-icon";
 import type { Transaction } from "@/backend/lib/types/database.types";
 import { Receipt, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -82,19 +83,7 @@ export const TransactionCard = memo(function TransactionCard({
         className="relative z-10 flex items-center gap-4 p-4 bg-white dark:bg-[#1a1a2e] border border-white dark:border-[#1a1a2e] shadow-sm hover:shadow-md transition-shadow group touch-pan-y md:border-border/40 md:dark:border-white/10"
       >
         {/* Category icon */}
-        <div
-          className="flex-shrink-0 w-12 h-12 rounded-[1rem] flex items-center justify-center"
-          style={{
-            backgroundColor: category?.color
-              ? `${category.color}15`
-              : "#6366f115",
-          }}
-        >
-          <div
-            className="w-3.5 h-3.5 rounded-full"
-            style={{ backgroundColor: category?.color ?? "#6366f1" }}
-          />
-        </div>
+        <CategoryIcon name={category?.name} color={category?.color} size="lg" />
 
         {/* Info */}
         <div className="flex-1 min-w-0">
