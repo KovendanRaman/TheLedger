@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { BottomNav } from "@/frontend/components/bottom-nav";
 import { TransactionCard } from "@/frontend/components/transaction-card";
 import { TransactionListSkeleton } from "@/frontend/components/transaction-card-skeleton";
@@ -25,12 +25,12 @@ import {
   MoreHorizontal,
   Tag,
   LayoutGrid,
-  Loader2,
   FileText,
   Plus,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/backend/lib/utils";
+import { format } from "date-fns";
 
 const PAGE_SIZE = 50;
 
@@ -65,6 +65,10 @@ const BILLABILITY_TABS: { label: string; value: BillabilityFilter }[] = [
 ];
 
 type SortOption = "date-desc" | "date-asc" | "amount-desc" | "amount-asc";
+
+function formatRand(value: number) {
+  return value.toLocaleString("en-ZA", { minimumFractionDigits: 2 });
+}
 
 export default function ExpensesPage() {
   const [allTxns, setAllTxns] = useState<Transaction[]>([]);
@@ -155,7 +159,19 @@ export default function ExpensesPage() {
   const visibleTxns = useMemo(() => sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [sorted, page]);
 
   const totalFiltered = sorted.reduce((s, t) => s + t.amount, 0);
+  const billableFiltered = sorted.filter((t) => t.is_invoicable);
+  const personalFiltered = sorted.filter((t) => !t.is_invoicable);
+  const billableTotal = billableFiltered.reduce((s, t) => s + t.amount, 0);
+  const personalTotal = personalFiltered.reduce((s, t) => s + t.amount, 0);
   const hasActiveFilters = activeStatus !== "all" || activeCategoryId !== "all" || activeBillability !== "all" || search.trim() !== "";
+
+  const clearAllFilters = useCallback(() => {
+    setSearch("");
+    setActiveStatus("all");
+    setActiveCategoryId("all");
+    setActiveBillability("all");
+    setSortBy("date-desc");
+  }, []);
 
   const handleDelete = useCallback(async (id: string) => {
     setAllTxns((prev) => prev.filter((t) => t.id !== id));
@@ -168,53 +184,64 @@ export default function ExpensesPage() {
   }, []);
 
   return (
-    <PageTransition className="min-h-screen bg-background pb-32">
-      {/* Header */}
-      <div className="px-5 pt-14 pb-4">
-        <div className="flex items-center gap-3 mb-6">
-          <Link
-            href="/dashboard"
-            className="p-2.5 rounded-full bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-sm hover:bg-secondary dark:hover:bg-white/10 transition-colors"
-          >
-            <ChevronLeft className="h-5 w-5 text-foreground" />
-          </Link>
-          <div className="flex-1">
-            <h1 className="text-[28px] leading-none font-bold text-foreground tracking-tight">
-              All Expenses
-            </h1>
-            <p className="text-[13px] font-medium text-muted-foreground mt-1">
-              {loading ? (
-                <span className="inline-block h-3 w-32 rounded bg-border/40 animate-pulse" />
-              ) : (
-                `${allTxns.length} total transactions`
-              )}
-            </p>
+    <PageTransition className="min-h-screen bg-[#F4F5FB] dark:bg-[#0f0f14] pb-32 md:pb-12 text-foreground transition-colors duration-300">
+      <div className="px-4 sm:px-6 md:px-10 mx-auto w-full max-w-4xl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 pt-10 pb-5">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/dashboard"
+              className="p-2.5 rounded-full bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm hover:border-primary/40 hover:shadow-md transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.95] flex-shrink-0"
+            >
+              <ChevronLeft className="h-5 w-5 text-foreground" />
+            </Link>
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-0.5">
+                {format(new Date(), "EEEE, d MMMM")}
+              </p>
+              <h1 className="text-[22px] sm:text-[28px] leading-tight font-bold tracking-tight truncate">
+                All Expenses
+              </h1>
+              <p className="text-[12px] sm:text-[13px] font-medium text-muted-foreground mt-0.5">
+                {loading ? (
+                  <span className="inline-block h-3 w-32 rounded bg-border/40 animate-pulse" />
+                ) : (
+                  `${allTxns.length} total transaction${allTxns.length !== 1 ? "s" : ""}`
+                )}
+              </p>
+            </div>
           </div>
-          <Link
-            href="/invoices"
-            className="p-2.5 rounded-full bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-sm hover:bg-secondary dark:hover:bg-white/10 transition-colors hidden sm:block"
-            title="Statements"
-          >
-            <FileText className="h-5 w-5 text-foreground" />
-          </Link>
-          <Link
-            href="/add"
-            className="p-2.5 rounded-full bg-primary border border-primary shadow-sm shadow-primary/20 flex items-center justify-center transition-transform hover:scale-[1.02] active:scale-95"
-            title="Add transaction"
-          >
-            <Plus className="h-5 w-5 text-white" />
-          </Link>
-          <button
-            onClick={() => setShowFilters((v) => !v)}
-            className={cn(
-              "p-2.5 rounded-full border shadow-sm transition-all",
-              showFilters || activeCategoryId !== "all" || sortBy !== "date-desc"
-                ? "bg-primary text-white border-primary shadow-primary/20"
-                : "bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 text-foreground"
-            )}
-          >
-            <SlidersHorizontal className="h-5 w-5" />
-          </button>
+
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <Link
+              href="/invoices"
+              className="p-2.5 rounded-full bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm hover:border-primary/40 hover:shadow-md transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.95] hidden sm:block"
+              title="Invoices"
+            >
+              <FileText className="h-5 w-5 text-foreground" />
+            </Link>
+            <Link
+              href="/add"
+              className="p-2.5 rounded-full text-white shadow-[0_4px_12px_rgba(99,102,241,0.3)] flex items-center justify-center transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.95]"
+              style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+              title="Add transaction"
+            >
+              <Plus className="h-5 w-5" />
+            </Link>
+            <button
+              onClick={() => setShowFilters((v) => !v)}
+              className={cn(
+                "p-2.5 rounded-full border shadow-sm transition-[background-color,border-color,box-shadow,transform] duration-150 active:scale-[0.95]",
+                showFilters || activeCategoryId !== "all" || sortBy !== "date-desc"
+                  ? "bg-primary text-white border-primary shadow-[0_4px_12px_rgba(99,102,241,0.3)]"
+                  : "bg-white dark:bg-[#1a1a2e] border-border/40 dark:border-white/10 text-foreground hover:border-primary/40"
+              )}
+              title="Sort & category filters"
+            >
+              <SlidersHorizontal className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Search bar */}
@@ -225,7 +252,7 @@ export default function ExpensesPage() {
             placeholder="Search expenses..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-12 pl-11 pr-10 rounded-[1rem] bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 shadow-sm text-[15px] font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full h-12 pl-11 pr-10 rounded-2xl bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 shadow-sm text-[15px] font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-[border-color,box-shadow] duration-150"
           />
           {search && (
             <button
@@ -237,9 +264,9 @@ export default function ExpensesPage() {
           )}
         </div>
 
-        {/* Extended Filters */}
+        {/* Extended Filters: sort + category */}
         {showFilters && (
-          <div className="mt-5 space-y-6">
+          <div className="mt-4 bg-white dark:bg-[#1a1a2e] rounded-3xl border border-border/40 dark:border-white/10 shadow-sm p-5 space-y-6">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3 pl-1">
                 Sort By
@@ -255,11 +282,12 @@ export default function ExpensesPage() {
                     key={opt.value}
                     onClick={() => setSortBy(opt.value as SortOption)}
                     className={cn(
-                      "px-4 py-2 rounded-[1rem] text-[13px] font-semibold border transition-all",
+                      "px-4 py-2 rounded-full text-[13px] font-semibold border transition-[background-color,border-color,color,box-shadow,transform] duration-150 active:scale-[0.97]",
                       sortBy === opt.value
-                        ? "bg-foreground text-background border-foreground shadow-md shadow-foreground/10"
-                        : "bg-white dark:bg-[#1a1a2e] border border-border/50 dark:border-white/10 text-muted-foreground hover:border-primary/30 shadow-sm"
+                        ? "text-white border-transparent shadow-[0_4px_12px_rgba(99,102,241,0.3)]"
+                        : "bg-[#F4F5FB] dark:bg-white/5 border-border/40 dark:border-white/10 text-muted-foreground hover:border-primary/30"
                     )}
+                    style={sortBy === opt.value ? { backgroundColor: "#6366f1" } : undefined}
                   >
                     {opt.label}
                   </button>
@@ -313,67 +341,105 @@ export default function ExpensesPage() {
             </div>
           </div>
         )}
-      </div>
 
-      {/* Billability Toggle */}
-      <div className="flex gap-2 px-5 mb-3 overflow-x-auto no-scrollbar pb-1">
-        <p className="sr-only">Filter by type</p>
-        {BILLABILITY_TABS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setActiveBillability(tab.value)}
-            className={cn(
-              "px-5 py-2.5 rounded-[1rem] text-[13px] font-semibold whitespace-nowrap transition-all border",
-              activeBillability === tab.value
-                ? "bg-foreground text-background border-foreground shadow-md shadow-foreground/10"
-                : "bg-white dark:bg-[#1a1a2e] text-muted-foreground border border-border/50 dark:border-white/10 hover:border-primary/30 shadow-sm shadow-black/5"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+        {/* Consolidated filter pills: billability + status.
+            Mobile: stacked full-width rows so everything is visible without scrolling.
+            sm+: inline row. */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-4 mb-4">
+          <div className="flex w-full sm:w-auto p-1 bg-white dark:bg-[#1a1a2e] rounded-full border border-border/40 dark:border-white/10 shadow-sm">
+            {BILLABILITY_TABS.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setActiveBillability(tab.value)}
+                className={cn(
+                  "flex-1 sm:flex-initial px-2 sm:px-4 py-1.5 rounded-full text-[12px] sm:text-[13px] font-semibold whitespace-nowrap transition-[background-color,color] duration-150",
+                  activeBillability === tab.value
+                    ? "text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)]"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                style={activeBillability === tab.value ? { backgroundColor: "#6366f1" } : undefined}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-      {/* Status Tabs — only shown when billability is not "personal" */}
-      {activeBillability !== "personal" && (
-        <div className="flex gap-2 px-5 mb-5 overflow-x-auto no-scrollbar pb-1">
-          {STATUS_TABS.map((tab) => (
+          {/* Status — only applies to billable items */}
+          {activeBillability !== "personal" && (
+            <div className="flex w-full sm:w-auto p-1 bg-white dark:bg-[#1a1a2e] rounded-full border border-border/40 dark:border-white/10 shadow-sm">
+              {STATUS_TABS.map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => setActiveStatus(tab.value)}
+                  className={cn(
+                    "flex-1 sm:flex-initial px-2 sm:px-4 py-1.5 rounded-full text-[12px] sm:text-[13px] font-semibold whitespace-nowrap transition-[background-color,color] duration-150",
+                    activeStatus === tab.value
+                      ? "text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)]"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  style={activeStatus === tab.value ? { backgroundColor: "#6366f1" } : undefined}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {hasActiveFilters && (
             <button
-              key={tab.value}
-              onClick={() => setActiveStatus(tab.value)}
-              className={cn(
-                "px-5 py-2.5 rounded-[1rem] text-[13px] font-semibold whitespace-nowrap transition-all border",
-                activeStatus === tab.value
-                  ? "gradient-primary text-white border-transparent glow-primary shadow-lg"
-                  : "bg-white dark:bg-[#1a1a2e] text-muted-foreground border border-border/50 dark:border-white/10 hover:border-primary/30 shadow-sm shadow-black/5"
-              )}
+              onClick={clearAllFilters}
+              className="flex items-center justify-center gap-1 px-3 py-1 sm:py-2 text-[13px] font-bold text-primary hover:underline whitespace-nowrap self-end sm:self-auto"
             >
-              {tab.label}
+              <X className="h-3.5 w-3.5" />
+              Clear
             </button>
-          ))}
+          )}
         </div>
-      )}
 
-      {/* Results summary */}
-      {!loading && (
-        <div className="px-5 mb-4 flex items-center justify-between">
-          <p className="text-[13px] font-medium text-muted-foreground">
-            {sorted.length} {sorted.length === 1 ? "result" : "results"}
-            {hasActiveFilters && " (filtered)"}
-          </p>
-          <p className="text-[13px] font-bold font-mono text-foreground">
-            R {totalFiltered.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
-          </p>
-        </div>
-      )}
+        {/* Summary stat strip — live-updates with filters */}
+        {!loading && (
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="bg-white dark:bg-[#1a1a2e] p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-border/40 dark:border-white/10 shadow-sm">
+              <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Total</p>
+              <p className="text-[14px] sm:text-[18px] font-bold tracking-tight leading-none mb-1">
+                <span className="text-[10px] sm:text-[13px] text-muted-foreground font-semibold pr-0.5">R</span>
+                {formatRand(totalFiltered)}
+              </p>
+              <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground">
+                {sorted.length} result{sorted.length !== 1 ? "s" : ""}{hasActiveFilters ? " · filtered" : ""}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-[#1a1a2e] p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-border/40 dark:border-white/10 shadow-sm">
+              <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Billable</p>
+              <p className="text-[14px] sm:text-[18px] font-bold tracking-tight leading-none mb-1">
+                <span className="text-[10px] sm:text-[13px] text-muted-foreground font-semibold pr-0.5">R</span>
+                {formatRand(billableTotal)}
+              </p>
+              <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground">
+                {billableFiltered.length} txn{billableFiltered.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-[#1a1a2e] p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-border/40 dark:border-white/10 shadow-sm">
+              <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Personal</p>
+              <p className="text-[14px] sm:text-[18px] font-bold tracking-tight leading-none mb-1">
+                <span className="text-[10px] sm:text-[13px] text-muted-foreground font-semibold pr-0.5">R</span>
+                {formatRand(personalTotal)}
+              </p>
+              <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground">
+                {personalFiltered.length} txn{personalFiltered.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+          </div>
+        )}
 
-      {/* List */}
-      <div className="px-5">
+        {/* List */}
         {loading ? (
-          <TransactionListSkeleton count={7} />
+          <div className="mt-4">
+            <TransactionListSkeleton count={7} />
+          </div>
         ) : sorted.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center bg-white dark:bg-[#1a1a2e] rounded-[1.5rem] border border-border/50 dark:border-white/10 shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center mb-4">
+          <div className="flex flex-col items-center justify-center py-16 text-center bg-white dark:bg-[#1a1a2e] rounded-3xl border border-border/40 dark:border-white/10 shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center mb-4">
               <Search className="h-7 w-7 text-primary/40" />
             </div>
             <p className="text-foreground font-semibold">No matching expenses</p>
@@ -382,13 +448,7 @@ export default function ExpensesPage() {
             </p>
             {hasActiveFilters && (
               <button
-                onClick={() => {
-                  setSearch("");
-                  setActiveStatus("all");
-                  setActiveCategoryId("all");
-                  setActiveBillability("all");
-                  setSortBy("date-desc");
-                }}
+                onClick={clearAllFilters}
                 className="mt-4 text-[13px] font-bold text-primary hover:underline"
               >
                 Clear all filters
@@ -409,7 +469,7 @@ export default function ExpensesPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-4 py-2 rounded-xl text-[13px] font-bold bg-white dark:bg-[#1a1a2e] border border-border/50 disabled:opacity-50 transition-all shadow-sm disabled:cursor-not-allowed hover:-translate-x-0.5 active:translate-x-0 disabled:hover:translate-x-0"
+                  className="px-5 py-2.5 rounded-full text-[13px] font-bold bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 disabled:opacity-50 transition-all shadow-sm disabled:cursor-not-allowed hover:-translate-x-0.5 active:translate-x-0 disabled:hover:translate-x-0"
                 >
                   Previous
                 </button>
@@ -424,7 +484,7 @@ export default function ExpensesPage() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-4 py-2 rounded-xl text-[13px] font-bold bg-white dark:bg-[#1a1a2e] border border-border/50 disabled:opacity-50 transition-all shadow-sm disabled:cursor-not-allowed hover:translate-x-0.5 active:translate-x-0 disabled:hover:translate-x-0"
+                  className="px-5 py-2.5 rounded-full text-[13px] font-bold bg-white dark:bg-[#1a1a2e] border border-border/40 dark:border-white/10 disabled:opacity-50 transition-all shadow-sm disabled:cursor-not-allowed hover:translate-x-0.5 active:translate-x-0 disabled:hover:translate-x-0"
                 >
                   Next
                 </button>
@@ -432,6 +492,7 @@ export default function ExpensesPage() {
             )}
           </>
         )}
+
       </div>
 
       <BottomNav />
